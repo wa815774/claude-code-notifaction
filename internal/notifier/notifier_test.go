@@ -18,6 +18,24 @@ import (
 	"github.com/wa815774/claude-notifications/internal/config"
 )
 
+// TestMain prevents notifier tests from sending real desktop notifications on
+// Windows and from spawning notifier.test.exe zombie processes.
+func TestMain(m *testing.M) {
+	if runtime.GOOS == "windows" {
+		originalExecCommand := execCommand
+		execCommand = func(name string, args ...string) *exec.Cmd {
+			// Block PowerShell notification commands to avoid real toast pop-ups
+			// during test runs. Using cmd /c exit 0 is fast and harmless.
+			if strings.EqualFold(name, "powershell.exe") || strings.EqualFold(name, "powershell") {
+				return exec.Command("cmd", "/c", "exit", "0")
+			}
+			return originalExecCommand(name, args...)
+		}
+		defer func() { execCommand = originalExecCommand }()
+	}
+	os.Exit(m.Run())
+}
+
 func TestExtractSessionInfo(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -746,6 +764,9 @@ func TestBuildNotifierCommand_UsesDirectBinaryForLegacy(t *testing.T) {
 }
 
 func TestRunClaudeNotifierApp_PermissionDeniedError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	restoreExecCommand := installFakeOpen(t, fmt.Sprintf("Error: %s", macOSPermissionDeniedMessage), 0)
 	defer restoreExecCommand()
 
@@ -761,6 +782,9 @@ func TestRunClaudeNotifierApp_PermissionDeniedError(t *testing.T) {
 }
 
 func TestRunClaudeNotifierApp_ReportsGenericStderr(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	restoreExecCommand := installFakeOpen(t, "Error: unexpected notifier failure", 0)
 	defer restoreExecCommand()
 
@@ -1120,6 +1144,9 @@ func TestSendTmuxPaneBell_NoPaneEnv_NoOp(t *testing.T) {
 }
 
 func TestSendTmuxPaneBell_WritesBELToPaneTTY(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	// Create a temp file that stands in for the pane tty. Writing BEL into it
 	// should succeed and produce a single 0x07 byte.
 	tmpDir := t.TempDir()
@@ -1166,6 +1193,9 @@ func TestSendTmuxPaneBell_WritesBELToPaneTTY(t *testing.T) {
 }
 
 func TestSendTmuxPaneBell_TmuxFailureDoesNotPanic(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	// When tmux exits non-zero, the fallback should log and return cleanly.
 	t.Setenv("TMUX", "/tmp/tmux-501/default,1,0")
 	t.Setenv("TMUX_PANE", "%42")
@@ -1489,6 +1519,9 @@ func TestBuildFocusScript_Iterm2WithoutHelperFallsBackToActivate(t *testing.T) {
 }
 
 func TestBuildFocusScript_Iterm2DisabledAPIFallsBackToActivateAndPromptsOnce(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	withIsolatedEnv(t)
 	setupFakeiTerm2Env(t)
 	t.Setenv(iTerm2SessionIDEnv, "w0t0p9:disabled")
@@ -1528,6 +1561,9 @@ func TestBuildFocusScript_Iterm2DisabledAPIFallsBackToActivateAndPromptsOnce(t *
 }
 
 func TestBuildFocusScript_Iterm2HealthcheckConnectFailureFallsBackToActivateAndPromptsOnce(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	withIsolatedEnv(t)
 	setupFakeiTerm2Env(t)
 	t.Setenv(iTerm2SessionIDEnv, "w0t0p9:connect-failure")
@@ -1570,6 +1606,9 @@ func TestBuildFocusScript_Iterm2HealthcheckConnectFailureFallsBackToActivateAndP
 }
 
 func TestBuildTmuxCCNotifierArgs_DisabledAPIErrors(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping helper-process test on Windows to avoid notifier.test.exe cascade")
+	}
 	setupFakeiTerm2Env(t)
 
 	restoreExecCommand := installFakeOpen(t, "", iTerm2HealthcheckExitDisabled)

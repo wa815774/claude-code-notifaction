@@ -132,8 +132,77 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 	// Parse hook data
 	bench.Start("stdin.parse")
 	var hookData HookData
-	if err := json.NewDecoder(skipUTF8BOM(input)).Decode(&hookData); err != nil {
-		return fmt.Errorf("failed to parse hook data: %w", err)
+	rawInput, err := io.ReadAll(skipUTF8BOM(input))
+	if err != nil {
+		return fmt.Errorf("failed to read hook data: %w", err)
+	}
+
+	// Defensive: gracefully handle empty or whitespace-only input.
+	// On Windows, multiple hook processes may race for stdin; some get no data.
+	if len(bytes.TrimSpace(rawInput)) == 0 {
+		logging.Debug("Empty hook input received (len=%d), skipping silently", len(rawInput))
+		return nil
+	}
+	logging.Debug("Received hook input, len=%d bytes", len(rawInput))
+
+	// Try strict parsing first (clean control characters)
+	cleanData := bytes.ReplaceAll(bytes.ReplaceAll(rawInput, []byte("\r"), []byte{}), []byte("\n"), []byte{})
+	if err := json.Unmarshal(cleanData, &hookData); err != nil {
+		// Log raw input for debugging (truncate to avoid huge logs)
+		rawPreview := string(rawInput)
+		if len(rawPreview) > 500 {
+			rawPreview = rawPreview[:500] + "... (truncated)"
+		}
+		logging.Debug("JSON parse failed (strict), raw input: %q", rawPreview)
+
+		// Try lenient parsing: fix unescaped backslashes in Windows paths.
+		// Claude Code sometimes emits JSON with unescaped Windows path separators
+		// (e.g., C:\Users instead of C:\\Users), causing errors like
+		// "invalid character 'U' in string escape code".
+		fixed := fixUnescapedBackslashes(cleanData)
+		if fixed != nil {
+			if err2 := json.Unmarshal(fixed, &hookData); err2 == nil {
+				logging.Debug("JSON parsed after fixing unescaped backslashes")
+			} else {
+				// If the JSON is truncated (e.g. large last_assistant_message exceeds
+				// PowerShell pipe buffer), try to extract critical fields from the
+				// partial data so the hook can still proceed.
+				if isTruncatedJSONError(err2) || isTruncatedJSONError(err) {
+					if partial, ok := extractHookDataFromPartialJSON(cleanData); ok {
+						hookData = partial
+						logging.Debug("Recovered hook data from truncated JSON: session=%s, transcript=%s",
+							hookData.SessionID, hookData.TranscriptPath)
+					} else {
+						fixedPreview := string(fixed)
+						if len(fixedPreview) > 300 {
+							fixedPreview = fixedPreview[:300] + "..."
+						}
+						logging.Debug("JSON parse failed (lenient), fixed input: %q, error: %v", fixedPreview, err2)
+						return fmt.Errorf("failed to parse hook data: %w (original error: %v)", err2, err)
+					}
+				} else {
+					fixedPreview := string(fixed)
+					if len(fixedPreview) > 300 {
+						fixedPreview = fixedPreview[:300] + "..."
+					}
+					logging.Debug("JSON parse failed (lenient), fixed input: %q, error: %v", fixedPreview, err2)
+					return fmt.Errorf("failed to parse hook data: %w (original error: %v)", err2, err)
+				}
+			}
+		} else {
+			// No unescaped backslash fix possible; check if it's a truncation issue.
+			if isTruncatedJSONError(err) {
+				if partial, ok := extractHookDataFromPartialJSON(cleanData); ok {
+					hookData = partial
+					logging.Debug("Recovered hook data from truncated JSON: session=%s, transcript=%s",
+						hookData.SessionID, hookData.TranscriptPath)
+				} else {
+					return fmt.Errorf("failed to parse hook data: %w", err)
+				}
+			} else {
+				return fmt.Errorf("failed to parse hook data: %w", err)
+			}
+		}
 	}
 	bench.Elapsed("stdin.parse")
 
@@ -172,7 +241,6 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 	// Determine status based on hook type
 	var status analyzer.Status
 	var parsedMessages []jsonl.Message // reused by generateMessage to avoid double I/O
-	var err error
 
 	switch hookEvent {
 	case "PreToolUse":
@@ -495,6 +563,147 @@ func skipUTF8BOM(input io.Reader) io.Reader {
 		_, _ = reader.Discard(3)
 	}
 	return reader
+}
+
+// fixUnescapedBackslashes attempts to repair JSON strings where Windows path
+// backslashes were not properly escaped (e.g., "C:\Users" instead of
+// "C:\\Users"). It walks the raw JSON bytes, identifies backslashes inside
+// string literals, and doubles any backslash that does not form a valid JSON
+// escape sequence. Returns nil if no fixes were needed or if the input does not
+// look like JSON.
+func fixUnescapedBackslashes(data []byte) []byte {
+	var out bytes.Buffer
+	inString := false
+	escaped := false
+	madeFix := false
+
+	for i := 0; i < len(data); i++ {
+		b := data[i]
+
+		if !inString {
+			if b == '"' {
+				inString = true
+			}
+			out.WriteByte(b)
+			continue
+		}
+
+		// We are inside a JSON string
+		if escaped {
+			// This byte follows a backslash inside a string.
+			// Check if it forms a valid JSON escape sequence.
+			validEscapes := "\"\\/bfnrtu"
+			if bytes.IndexByte([]byte(validEscapes), b) == -1 {
+				// Invalid escape: the preceding backslash was not meant to be
+				// an escape marker (it was a literal path separator).
+				// Insert an extra backslash before this character.
+				out.WriteByte('\\')
+				madeFix = true
+			}
+			out.WriteByte(b)
+			escaped = false
+			continue
+		}
+
+		if b == '\\' {
+			escaped = true
+			out.WriteByte(b)
+			continue
+		}
+
+		if b == '"' {
+			inString = false
+		}
+		out.WriteByte(b)
+	}
+
+	if !madeFix {
+		return nil
+	}
+	return out.Bytes()
+}
+
+// isTruncatedJSONError reports whether err indicates the JSON was cut off
+// mid-stream (common on Windows when large payloads exceed pipe buffers).
+func isTruncatedJSONError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "unexpected end of JSON input") ||
+		strings.Contains(msg, "unexpected EOF")
+}
+
+// extractHookDataFromPartialJSON attempts to pull out the critical fields
+// from a truncated JSON payload so a Stop hook can still proceed even when
+// Claude Code sends an oversized object that gets cut off by PowerShell pipes.
+func extractHookDataFromPartialJSON(data []byte) (HookData, bool) {
+	var result HookData
+	found := false
+
+	// Helper: extract a quoted string value for the given key.
+	// Handles both escaped and unescaped quotes/backslashes conservatively.
+	extract := func(key string) string {
+		pattern := []byte(`"` + key + `"`)
+		idx := bytes.Index(data, pattern)
+		if idx == -1 {
+			// Try with spaces: "key" : "value"
+			pattern = []byte(`"` + key + `"`)
+			idx = bytes.Index(data, pattern)
+			if idx == -1 {
+				return ""
+			}
+		}
+		// Move past the key and colon
+		start := idx + len(pattern)
+		// Skip whitespace and colon
+		for start < len(data) && (data[start] == ' ' || data[start] == ':' || data[start] == '\t') {
+			start++
+		}
+		// Expect opening quote
+		if start >= len(data) || data[start] != '"' {
+			return ""
+		}
+		start++ // skip opening quote
+		end := start
+		for end < len(data) {
+			if data[end] == '\\' && end+1 < len(data) {
+				end += 2 // skip escaped char
+				continue
+			}
+			if data[end] == '"' {
+				break
+			}
+			end++
+		}
+		if end > start {
+			return string(data[start:end])
+		}
+		return ""
+	}
+
+	if v := extract("session_id"); v != "" {
+		result.SessionID = v
+		found = true
+	}
+	if v := extract("transcript_path"); v != "" {
+		result.TranscriptPath = v
+		found = true
+	}
+	if v := extract("cwd"); v != "" {
+		result.CWD = v
+		found = true
+	}
+	if v := extract("hook_event_name"); v != "" {
+		result.HookEventName = v
+		found = true
+	}
+	if v := extract("tool_name"); v != "" {
+		result.ToolName = v
+		found = true
+	}
+
+	return result, found
 }
 
 // handleStopEvent handles Stop/SubagentStop hooks.

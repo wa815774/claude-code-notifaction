@@ -184,9 +184,14 @@ func parseWindowsHooksExecutable(args []string) (string, error) {
 }
 
 func newPowerShellHook(exePath, hookName string) hookCommand {
+	// [Console]::InputEncoding ensures PowerShell reads stdin (and $input) as UTF-8,
+	// preventing multi-byte characters (e.g. é, emoji) from being mis-decoded as
+	// system-default ANSI/GBK which corrupts the JSON structure.
 	return hookCommand{
-		Type:    "command",
-		Command: "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); $input | & " + powershellDoubleQuoted(exePath) + " handle-hook " + hookName,
+		Type: "command",
+		Command: "$OutputEncoding = [System.Text.UTF8Encoding]::new($false); " +
+			"[Console]::InputEncoding = [System.Text.Encoding]::UTF8; " +
+			"$input | & " + powershellDoubleQuoted(exePath) + " handle-hook " + hookName,
 		Timeout: 30,
 		Shell:   "powershell",
 	}

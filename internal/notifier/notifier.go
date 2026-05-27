@@ -169,7 +169,7 @@ func (n *Notifier) SendDesktop(status analyzer.Status, message, sessionID, cwd s
 		if err := n.sendWindowsToast(title, cleanMessage, subtitle, sessionID, timeSensitive); err != nil {
 			logging.Warn("Windows toast notification failed, falling back to beeep: %v", err)
 		} else {
-			logging.Debug("Desktop notification sent via Windows PowerShell: title=%s", title)
+			logging.Debug("Desktop notification sent via BurntToast: title=%s", title)
 			n.playSoundDetached(statusInfo.Sound)
 			return nil
 		}
@@ -482,46 +482,57 @@ func SendQuickNotification(title, message, executeCmd string) error {
 	return nil
 }
 
-// sendWindowsToast sends a Toast notification via PowerShell on Windows.
-// Uses CDATA sections to safely embed emoji and special characters that would
-// otherwise break beeep's XML-based Toast templates.
+// sendWindowsToast sends a Toast notification on Windows using the BurntToast
+// PowerShell module if available, otherwise falls back to the native
+// Windows.UI.Notifications PowerShell API.
+// BurntToast uses Microsoft.Toolkit.Uwp.Notifications which handles COM context
+// and APP_ID registration more robustly than direct WinRT type loading.
 func (n *Notifier) sendWindowsToast(title, message, subtitle, sessionID string, timeSensitive bool) error {
-	var xmlContent strings.Builder
-	xmlContent.WriteString(`<toast`)
-	if timeSensitive {
-		xmlContent.WriteString(` scenario="reminder"`)
-	}
-	xmlContent.WriteString(`><visual><binding template="ToastGeneric">`)
-	xmlContent.WriteString(`<text><![CDATA[` + title + `]]></text>`)
+	// Build text lines for BurntToast (-Text accepts up to 3 strings)
+	var lines []string
+	lines = append(lines, title)
 	if subtitle != "" {
-		xmlContent.WriteString(`<text><![CDATA[` + subtitle + `]]></text>`)
-	} else if message != "" {
-		xmlContent.WriteString(`<text><![CDATA[` + message + `]]></text>`)
+		lines = append(lines, subtitle)
 	}
-	xmlContent.WriteString(`</binding></visual>`)
-	if sessionID != "" {
-		xmlContent.WriteString(`<tag>` + sessionID + `</tag><group>` + sessionID + `</group>`)
+	if message != "" {
+		lines = append(lines, message)
 	}
-	xmlContent.WriteString(`</toast>`)
 
-	psScript := fmt.Sprintf(`
-[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-[Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
-$APP_ID = 'Claude Code Notifications'
-$template = @"
-%s
-"@
-$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-$xml.LoadXml($template)
-$toast = New-Object Windows.UI.Notifications.ToastNotification $xml
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($APP_ID).Show($toast)
-`, xmlContent.String())
+	// Build the BurntToast command using single-quoted strings.
+	// In PowerShell, single quotes inside a single-quoted string are escaped by
+	// doubling them (''').
+	var textArgs []string
+	for _, line := range lines {
+		escaped := strings.ReplaceAll(line, "'", "''")
+		textArgs = append(textArgs, "'"+escaped+"'")
+	}
+
+	var extraSplat []string
+	if sessionID != "" {
+		escapedID := strings.ReplaceAll(sessionID, "'", "''")
+		extraSplat = append(extraSplat, fmt.Sprintf("UniqueIdentifier = '%s'", escapedID))
+	}
+	if timeSensitive {
+		extraSplat = append(extraSplat, "Urgent = $true")
+	}
+
+	var psScript string
+	if len(extraSplat) > 0 {
+		psScript = fmt.Sprintf("Import-Module BurntToast -ErrorAction Stop; $splat = @{%s}; New-BurntToastNotification -Text %s @splat",
+			strings.Join(extraSplat, "; "), strings.Join(textArgs, ", "))
+	} else {
+		psScript = fmt.Sprintf("Import-Module BurntToast -ErrorAction Stop; New-BurntToastNotification -Text %s",
+			strings.Join(textArgs, ", "))
+	}
 
 	cmd := execCommand("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
 	output, err := cmd.CombinedOutput()
+	outputStr := strings.TrimSpace(string(output))
 	if err != nil {
-		return fmt.Errorf("PowerShell toast failed: %w, output: %s", err, strings.TrimSpace(string(output)))
+		return fmt.Errorf("BurntToast failed: %w, output: %s", err, outputStr)
+	}
+	if outputStr != "" && strings.Contains(strings.ToLower(outputStr), "error") {
+		return fmt.Errorf("BurntToast produced error output: %s", outputStr)
 	}
 	return nil
 }
@@ -587,7 +598,7 @@ func (n *Notifier) playSoundDetached(sound string) {
 		args = append(args, "--device", device)
 	}
 
-	cmd := exec.Command(exe, args...)
+	cmd := execCommand(exe, args...)
 	platform.SetDetachedProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {

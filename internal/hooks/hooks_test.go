@@ -616,6 +616,63 @@ func TestHandler_ParsesJSONWithUTF8BOM(t *testing.T) {
 	}
 }
 
+func TestHandler_ParsesJSONWithCarriageReturn(t *testing.T) {
+	cfg := &config.Config{}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	// Simulate Windows PowerShell $input with raw \r in string values
+	input := "{\"session_id\":\"windows-session\",\"transcript_path\":\"D:\\\\path\\\\file.jsonl\",\"cwd\":\"D:\\\\code\"}\r\n"
+	if err := handler.HandleHook("Stop", strings.NewReader(input)); err != nil {
+		t.Fatalf("expected JSON with \\r to parse after cleaning, got %v", err)
+	}
+}
+
+func TestHandler_ParsesJSONWithCRLFInString(t *testing.T) {
+	cfg := &config.Config{}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	// Raw \r inside a JSON string value (invalid JSON per spec, but emitted by PowerShell)
+	input := "{\"session_id\":\"test\",\"transcript_path\":\"C:\\\\Users\\\\test\",\"cwd\":\"C:\\\\code\"}\r\n"
+	if err := handler.HandleHook("Stop", strings.NewReader(input)); err != nil {
+		t.Fatalf("expected JSON with CRLF to parse after cleaning, got %v", err)
+	}
+}
+
+func TestHandler_ParsesJSONWithNewlineInString(t *testing.T) {
+	cfg := &config.Config{}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	// Raw \n inside a JSON string value (invalid JSON per spec, but can appear in hook data)
+	input := "{\"session_id\":\"test\",\"transcript_path\":\"/tmp/transcript.jsonl\",\"cwd\":\"/tmp/my\\nproject\"}\n"
+	if err := handler.HandleHook("Stop", strings.NewReader(input)); err != nil {
+		t.Fatalf("expected JSON with raw \\n to parse after cleaning, got %v", err)
+	}
+}
+
+func TestHandler_ParsesJSONWithUnescapedBackslash(t *testing.T) {
+	cfg := &config.Config{}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	// Claude Code sometimes emits JSON with unescaped Windows path separators.
+	// In JSON, "C:\Users" is invalid (\U is not a valid escape). We should
+	// tolerate this by doubling the backslash.
+	input := `{"session_id":"test","transcript_path":"C:\Users\test\t.jsonl","cwd":"C:\code"}`
+	if err := handler.HandleHook("Stop", strings.NewReader(input)); err != nil {
+		t.Fatalf("expected JSON with unescaped backslashes to parse, got %v", err)
+	}
+}
+
+func TestHandler_ParsesJSONWithUnescapedBackslashAndNewline(t *testing.T) {
+	cfg := &config.Config{}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	// Combined: raw newline + unescaped backslash (worst-case PowerShell input)
+	input := "{\"session_id\":\"test\",\"transcript_path\":\"C:\\Users\\test\",\"cwd\":\"C:\\code\"}\r\n"
+	if err := handler.HandleHook("Stop", strings.NewReader(input)); err != nil {
+		t.Fatalf("expected JSON with \\r\\n + unescaped backslash to parse, got %v", err)
+	}
+}
+
 func TestHandler_MissingTranscriptFile(t *testing.T) {
 	cfg := &config.Config{
 		Notifications: config.NotificationsConfig{
@@ -2346,4 +2403,158 @@ func TestHandler_Stop_NonTeamLead_NormalBehavior(t *testing.T) {
 func setupTeamStateManager(t *testing.T, homeDir string) *teamstate.Manager {
 	t.Helper()
 	return teamstate.NewManager(filepath.Join(homeDir, ".claude"))
+}
+
+// === Regression tests for Windows intermittent failures ===
+
+func TestHandler_EmptyInput_SkipsSilently(t *testing.T) {
+	cfg := &config.Config{
+		Notifications: config.NotificationsConfig{
+			Desktop: config.DesktopConfig{Enabled: true},
+		},
+	}
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	// Empty stdin should not error — on Windows multiple hook processes may race
+	// for stdin and some receive no data.
+	err := handler.HandleHook("Stop", strings.NewReader(""))
+	if err != nil {
+		t.Fatalf("expected nil for empty input, got: %v", err)
+	}
+	if mockNotif.wasCalled() {
+		t.Error("expected no notification for empty input")
+	}
+}
+
+func TestHandler_WhitespaceOnlyInput_SkipsSilently(t *testing.T) {
+	cfg := &config.Config{
+		Notifications: config.NotificationsConfig{
+			Desktop: config.DesktopConfig{Enabled: true},
+		},
+	}
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	err := handler.HandleHook("Stop", strings.NewReader("   \n\r\n  "))
+	if err != nil {
+		t.Fatalf("expected nil for whitespace-only input, got: %v", err)
+	}
+	if mockNotif.wasCalled() {
+		t.Error("expected no notification for whitespace-only input")
+	}
+}
+
+func TestHandler_TruncatedJSON_RecoversCriticalFields(t *testing.T) {
+	// Simulate a large JSON that got truncated mid-string (common when
+	// last_assistant_message exceeds PowerShell pipe buffer on Windows).
+	truncated := `{"session_id":"abc-123","transcript_path":"C:\\Users\\test\\t.jsonl","cwd":"D:\\code","last_assistant_message":"This is a very long message that continues and then the pipe cut`
+
+	cfg := &config.Config{
+		Notifications: config.NotificationsConfig{
+			Desktop: config.DesktopConfig{Enabled: true},
+		},
+		Statuses: map[string]config.StatusInfo{
+			"task_complete": {Title: "Completed"},
+		},
+	}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	err := handler.HandleHook("Stop", strings.NewReader(truncated))
+	// We expect this to succeed because critical fields were recovered.
+	// The transcript file won't exist, so it silently skips — that's fine.
+	if err != nil {
+		t.Fatalf("expected no error after recovering from truncated JSON, got: %v", err)
+	}
+}
+
+func TestHandler_TruncatedJSON_WithUnescapedBackslash_Recovers(t *testing.T) {
+	// Truncated JSON that ALSO has unescaped Windows path backslashes.
+	truncated := `{"session_id":"abc-123","transcript_path":"C:\Users\test\t.jsonl","cwd":"D:\code","last_assistant_message":"some long text...`
+
+	cfg := &config.Config{
+		Notifications: config.NotificationsConfig{
+			Desktop: config.DesktopConfig{Enabled: true},
+		},
+		Statuses: map[string]config.StatusInfo{
+			"task_complete": {Title: "Completed"},
+		},
+	}
+	handler, _, _ := newTestHandler(t, cfg)
+
+	err := handler.HandleHook("Stop", strings.NewReader(truncated))
+	if err != nil {
+		t.Fatalf("expected no error after recovering from truncated+unescaped JSON, got: %v", err)
+	}
+}
+
+func TestExtractHookDataFromPartialJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		want     HookData
+		wantOk   bool
+	}{
+		{
+			name:   "complete json",
+			input:  `{"session_id":"s1","transcript_path":"/tmp/t.jsonl","cwd":"/code"}`,
+			want:   HookData{SessionID: "s1", TranscriptPath: "/tmp/t.jsonl", CWD: "/code"},
+			wantOk: true,
+		},
+		{
+			name:   "truncated after session_id",
+			input:  `{"session_id":"s1","transcript_path":"/tmp/t.jsonl","cwd":"/code","last_assistant_message":"hello wo`,
+			want:   HookData{SessionID: "s1", TranscriptPath: "/tmp/t.jsonl", CWD: "/code"},
+			wantOk: true,
+		},
+		{
+			name:   "truncated inside transcript_path",
+			input:  `{"session_id":"s1","transcript_path":"/tmp/t`,
+			want:   HookData{SessionID: "s1", TranscriptPath: "/tmp/t"},
+			wantOk: true,
+		},
+		{
+			name:   "empty object",
+			input:  `{}`,
+			want:   HookData{},
+			wantOk: false,
+		},
+		{
+			name:   "only hook_event_name",
+			input:  `{"hook_event_name":"Stop"}`,
+			want:   HookData{HookEventName: "Stop"},
+			wantOk: true,
+		},
+		{
+			name:   "with tool_name",
+			input:  `{"session_id":"s1","tool_name":"ExitPlanMode"}`,
+			want:   HookData{SessionID: "s1", ToolName: "ExitPlanMode"},
+			wantOk: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := extractHookDataFromPartialJSON([]byte(tt.input))
+			if ok != tt.wantOk {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOk)
+			}
+			if !tt.wantOk {
+				return
+			}
+			if got.SessionID != tt.want.SessionID {
+				t.Errorf("SessionID = %q, want %q", got.SessionID, tt.want.SessionID)
+			}
+			if got.TranscriptPath != tt.want.TranscriptPath {
+				t.Errorf("TranscriptPath = %q, want %q", got.TranscriptPath, tt.want.TranscriptPath)
+			}
+			if got.CWD != tt.want.CWD {
+				t.Errorf("CWD = %q, want %q", got.CWD, tt.want.CWD)
+			}
+			if got.HookEventName != tt.want.HookEventName {
+				t.Errorf("HookEventName = %q, want %q", got.HookEventName, tt.want.HookEventName)
+			}
+			if got.ToolName != tt.want.ToolName {
+				t.Errorf("ToolName = %q, want %q", got.ToolName, tt.want.ToolName)
+			}
+		})
+	}
 }
