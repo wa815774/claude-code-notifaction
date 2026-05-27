@@ -163,6 +163,18 @@ func (n *Notifier) SendDesktop(status analyzer.Status, message, sessionID, cwd s
 		}
 	}
 
+	// Windows: Use PowerShell Toast API for reliable notification delivery with emoji support.
+	// beeep uses XML templates that fail on certain emoji (e.g. 📋) due to LoadXml encoding issues.
+	if platform.IsWindows() {
+		if err := n.sendWindowsToast(title, cleanMessage, subtitle, sessionID, timeSensitive); err != nil {
+			logging.Warn("Windows toast notification failed, falling back to beeep: %v", err)
+		} else {
+			logging.Debug("Desktop notification sent via Windows PowerShell: title=%s", title)
+			n.playSoundDetached(statusInfo.Sound)
+			return nil
+		}
+	}
+
 	// Standard path: beeep (Windows, Linux fallback)
 	return n.sendWithBeeep(title, cleanMessage, appIcon, statusInfo.Sound)
 }
@@ -466,6 +478,50 @@ func SendQuickNotification(title, message, executeCmd string) error {
 	script := fmt.Sprintf(`display notification %q with title %q`, message, title)
 	if err := exec.Command("osascript", "-e", script).Run(); err != nil {
 		return fmt.Errorf("all notification methods failed: %w", err)
+	}
+	return nil
+}
+
+// sendWindowsToast sends a Toast notification via PowerShell on Windows.
+// Uses CDATA sections to safely embed emoji and special characters that would
+// otherwise break beeep's XML-based Toast templates.
+func (n *Notifier) sendWindowsToast(title, message, subtitle, sessionID string, timeSensitive bool) error {
+	var xmlContent strings.Builder
+	xmlContent.WriteString(`<toast`)
+	if timeSensitive {
+		xmlContent.WriteString(` scenario="reminder"`)
+	}
+	xmlContent.WriteString(`><visual><binding template="ToastGeneric">`)
+	xmlContent.WriteString(`<text><![CDATA[` + title + `]]></text>`)
+	if subtitle != "" {
+		xmlContent.WriteString(`<text><![CDATA[` + subtitle + `]]></text>`)
+	} else if message != "" {
+		xmlContent.WriteString(`<text><![CDATA[` + message + `]]></text>`)
+	}
+	xmlContent.WriteString(`</binding></visual>`)
+	if sessionID != "" {
+		xmlContent.WriteString(`<tag>` + sessionID + `</tag><group>` + sessionID + `</group>`)
+	}
+	xmlContent.WriteString(`</toast>`)
+
+	psScript := fmt.Sprintf(`
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
+$APP_ID = 'Claude Code Notifications'
+$template = @"
+%s
+"@
+$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+$xml.LoadXml($template)
+$toast = New-Object Windows.UI.Notifications.ToastNotification $xml
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($APP_ID).Show($toast)
+`, xmlContent.String())
+
+	cmd := execCommand("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("PowerShell toast failed: %w, output: %s", err, strings.TrimSpace(string(output)))
 	}
 	return nil
 }
