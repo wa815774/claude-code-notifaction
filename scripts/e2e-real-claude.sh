@@ -6,8 +6,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-MARKETPLACE_NAME="claude-notifications-go"
-PLUGIN_NAME="claude-notifications-go"
+MARKETPLACE_NAME="claude-code-notifaction"
+PLUGIN_NAME="claude-code-notifaction"
 PLUGIN_KEY="${PLUGIN_NAME}@${MARKETPLACE_NAME}"
 
 REAL_CLAUDE_HOME="${REAL_CLAUDE_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}}"

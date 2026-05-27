@@ -1,7 +1,7 @@
 {
-    "name": "claude-notifications-go",
+    "name": "claude-code-notifaction",
     "owner": {
-        "name": "777genius",
+        "name": "wa815774",
         "email": "iliyazelenkog@gmail.com"
     },
     "metadata": {
@@ -9,15 +9,15 @@
         "version": "1.39.1"
     },
     "plugins": [{
-        "name": "claude-notifications-go",
+        "name": "claude-code-notifaction",
         "source": "./",
         "description": "Smart notifications for Claude Code task statuses (Go implementation)",
         "version": "1.39.1",
         "author": {
-            "name": "777genius",
+            "name": "wa815774",
             "email": "iliyazelenkog@gmail.com"
         },
-        "repository": "https://github.com/777genius/claude-notifications-go",
+        "repository": "https://github.com/wa815774/claude-code-notifaction",
         "license": "GPL-3.0",
         "keywords": [
             "notifications",

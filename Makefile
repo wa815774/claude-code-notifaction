@@ -20,7 +20,7 @@ RELEASE_FLAGS=-ldflags="-s -w" -trimpath
 # Build targets
 build: ## Build the binaries (development mode with debug symbols)
 	@echo "Building $(BINARY), $(SOUND_PREVIEW) and $(LIST_SOUNDS) (development mode)..."
-	@go build -o $(BINARY_PATH) ./cmd/claude-notifications
+	@go build -o $(BINARY_PATH) ./cmd/claude-code-notifaction
 	@go build -o $(SOUND_PREVIEW_PATH) ./cmd/sound-preview
 	@go build -o $(LIST_SOUNDS_PATH) ./cmd/list-sounds
 	@echo "Build complete! Binaries in bin/"
@@ -29,11 +29,11 @@ build-all: ## Build optimized binaries for all platforms
 	@echo "Building optimized release binaries for all platforms..."
 	@mkdir -p dist
 	@echo "Building claude-notifications..."
-	@GOOS=darwin GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-darwin-amd64 ./cmd/claude-notifications
-	@GOOS=darwin GOARCH=arm64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-darwin-arm64 ./cmd/claude-notifications
-	@GOOS=linux GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-linux-amd64 ./cmd/claude-notifications
-	@GOOS=linux GOARCH=arm64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-linux-arm64 ./cmd/claude-notifications
-	@GOOS=windows GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-windows-amd64.exe ./cmd/claude-notifications
+	@GOOS=darwin GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-darwin-amd64 ./cmd/claude-code-notifaction
+	@GOOS=darwin GOARCH=arm64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-darwin-arm64 ./cmd/claude-code-notifaction
+	@GOOS=linux GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-linux-amd64 ./cmd/claude-code-notifaction
+	@GOOS=linux GOARCH=arm64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-linux-arm64 ./cmd/claude-code-notifaction
+	@GOOS=windows GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(BINARY)-windows-amd64.exe ./cmd/claude-code-notifaction
 	@echo "Building sound-preview..."
 	@GOOS=darwin GOARCH=amd64 go build $(RELEASE_FLAGS) -o dist/$(SOUND_PREVIEW)-darwin-amd64 ./cmd/sound-preview
 	@GOOS=darwin GOARCH=arm64 go build $(RELEASE_FLAGS) -o dist/$(SOUND_PREVIEW)-darwin-arm64 ./cmd/sound-preview

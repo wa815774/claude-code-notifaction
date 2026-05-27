@@ -18,7 +18,7 @@ Downloading the notification binary for your platform...
 # Get plugin root directory
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -30,7 +30,7 @@ echo "Plugin root: $PLUGIN_ROOT"
 echo ""
 
 # Always download the latest install.sh from GitHub to ensure we have newest version
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/777genius/claude-notifications-go/main/bin/install.sh"
+INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/wa815774/claude-code-notifaction/main/bin/install.sh"
 # Use portable temp directory (works on macOS, Linux, Windows Git Bash)
 TEMP_DIR="${TMPDIR:-${TEMP:-/tmp}}"
 TEMP_INSTALL_SCRIPT="${TEMP_DIR}/claude-notifications-install-$$.sh"
@@ -66,7 +66,7 @@ echo ""
 echo "✅ Binary installed successfully!"
 echo ""
 echo "Next steps:"
-echo "  Run /claude-notifications-go:settings to configure sounds and notifications"
+echo "  Run /claude-code-notifaction:settings to configure sounds and notifications"
 ```
 
 This will automatically download the correct binary for your platform from GitHub Releases. Running this command again will update all binaries to the latest version.

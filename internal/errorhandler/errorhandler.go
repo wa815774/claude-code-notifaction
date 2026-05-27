@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/777genius/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/logging"
 )
 
 // ErrorHandler provides global error handling and logging

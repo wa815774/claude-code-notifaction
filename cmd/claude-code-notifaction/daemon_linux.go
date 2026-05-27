@@ -5,7 +5,7 @@ package main
 import (
 	"log"
 
-	"github.com/777genius/claude-notifications/internal/daemon"
+	"github.com/wa815774/claude-notifications/internal/daemon"
 )
 
 // runDaemon runs the notification daemon server on Linux

@@ -3,16 +3,16 @@
 
 set -uo pipefail
 
-REPO="777genius/claude-notifications-go"
+REPO="wa815774/claude-code-notifaction"
 RAW_URL="https://raw.githubusercontent.com/${REPO}/main/scripts/linux-focus-debug.sh"
-MARKETPLACE_NAME="claude-notifications-go"
-PLUGIN_NAME="claude-notifications-go"
+MARKETPLACE_NAME="claude-code-notifaction"
+PLUGIN_NAME="claude-code-notifaction"
 PLUGIN_KEY="${PLUGIN_NAME}@${MARKETPLACE_NAME}"
 
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-${CLAUDE_HOME:-$HOME/.claude}}"
 KNOWN_MARKETPLACES_JSON="${CLAUDE_HOME}/plugins/known_marketplaces.json"
 INSTALLED_JSON="${CLAUDE_HOME}/plugins/installed_plugins.json"
-STABLE_CONFIG_JSON="${CLAUDE_HOME}/claude-notifications-go/config.json"
+STABLE_CONFIG_JSON="${CLAUDE_HOME}/claude-code-notifaction/config.json"
 
 DEFAULT_REPORT_PATH="${PWD}/claude-notifications-linux-focus-report-$(date +%Y%m%d-%H%M%S).txt"
 REPORT_PATH="${REPORT_PATH:-$DEFAULT_REPORT_PATH}"

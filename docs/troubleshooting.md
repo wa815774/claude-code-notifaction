@@ -49,7 +49,7 @@ TMPDIR="$HOME/.claude/tmp" claude
 Then retry:
 
 ```text
-/plugin install claude-notifications-go@claude-notifications-go
+/plugin install claude-code-notifaction@claude-code-notifaction
 ```
 
 ### Diagnostics (optional)
@@ -72,7 +72,7 @@ Clicking a notification focuses the wrong terminal window, a stale Terminator wi
 Reproduce the failed click first, then run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/777genius/claude-notifications-go/main/scripts/linux-focus-debug.sh | bash
+curl -fsSL https://raw.githubusercontent.com/wa815774/claude-code-notifaction/main/scripts/linux-focus-debug.sh | bash
 ```
 
 The script generates a report file in the current directory with:
@@ -110,7 +110,7 @@ Claude Code supports PowerShell command hooks on Windows via `"shell": "powershe
 
 ### Fix
 
-Run the bootstrap installer or `/claude-notifications-go:init` again, then restart Claude Code. On Windows, the installer rewrites the plugin hook file to use PowerShell hooks with an absolute path to the native `.exe`, avoiding the Git Bash/shebang path.
+Run the bootstrap installer or `/claude-code-notifaction:init` again, then restart Claude Code. On Windows, the installer rewrites the plugin hook file to use PowerShell hooks with an absolute path to the native `.exe`, avoiding the Git Bash/shebang path.
 
 If you need to inspect or apply the configuration manually, generate a PowerShell hook configuration from the installed executable. Replace `<arch>` with `amd64` or `arm64`:
 
@@ -199,7 +199,7 @@ If you cannot run `windows-hooks`, replace the installed plugin's `hooks/hooks.j
 }
 ```
 
-This workaround is based on confirmed Windows 11 behavior from [issue #73](https://github.com/777genius/claude-notifications-go/issues/73#issuecomment-4364271319).
+This workaround is based on confirmed Windows 11 behavior from [issue #73](https://github.com/wa815774/claude-code-notifaction/issues/73#issuecomment-4364271319).
 
 ### Note about beeep logs
 
@@ -209,7 +209,7 @@ If the log contains `beeep.Notify failed on windows: doc.LoadXml(tmpl)` but the 
 
 ### Symptom
 
-Bootstrap or `/claude-notifications-go:init` installs the plugin itself, but downloading `claude-notifications-windows-<arch>.exe` fails with an empty or generic network error.
+Bootstrap or `/claude-code-notifaction:init` installs the plugin itself, but downloading `claude-notifications-windows-<arch>.exe` fails with an empty or generic network error.
 
 ### Why it happens
 
@@ -224,4 +224,4 @@ Bootstrap or `/claude-notifications-go:init` installs the plugin itself, but dow
 1. If your company requires a proxy, make sure the terminal running Claude Code or bootstrap has `HTTPS_PROXY`, `HTTP_PROXY`, or `ALL_PROXY` configured.
 2. If your network inspects TLS traffic, ensure Git Bash `curl` trusts the corporate CA certificate.
 3. Retry from another network or from WSL to confirm whether the issue is network-specific.
-4. As a fallback, open the latest release page, download the matching `claude-notifications-windows-amd64.exe` or `claude-notifications-windows-arm64.exe`, place it into the plugin `bin` directory, and then re-run `/claude-notifications-go:init`.
+4. As a fallback, open the latest release page, download the matching `claude-notifications-windows-amd64.exe` or `claude-notifications-windows-arm64.exe`, place it into the plugin `bin` directory, and then re-run `/claude-code-notifaction:init`.

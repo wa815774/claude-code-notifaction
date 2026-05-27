@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/777genius/claude-notifications/internal/config"
-	"github.com/777genius/claude-notifications/pkg/jsonl"
+	"github.com/wa815774/claude-notifications/internal/config"
+	"github.com/wa815774/claude-notifications/pkg/jsonl"
 )
 
 // === Test Helpers ===

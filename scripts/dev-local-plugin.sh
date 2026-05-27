@@ -8,11 +8,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-MARKETPLACE_NAME="claude-notifications-go"
-PLUGIN_NAME="claude-notifications-go"
+MARKETPLACE_NAME="claude-code-notifaction"
+PLUGIN_NAME="claude-code-notifaction"
 PLUGIN_KEY="${PLUGIN_NAME}@${MARKETPLACE_NAME}"
 
-DEFAULT_DEV_HOME="${HOME}/.claude-dev/claude-notifications-go"
+DEFAULT_DEV_HOME="${HOME}/.claude-dev/claude-code-notifaction"
 DEV_CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-${DEV_CLAUDE_HOME:-$DEFAULT_DEV_HOME}}"
 
 INSTALLED_JSON="${DEV_CLAUDE_HOME}/plugins/installed_plugins.json"

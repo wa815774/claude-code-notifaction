@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/777genius/claude-notifications/internal/logging"
-	"github.com/777genius/claude-notifications/internal/platform"
+	"github.com/wa815774/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/platform"
 )
 
 // Manager handles deduplication using two-phase locking

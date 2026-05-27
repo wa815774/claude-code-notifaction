@@ -802,7 +802,7 @@ test_windows_native_hooks_real_powershell_launch() {
     printf '{"hooks":{}}\n' > "$hooks_dir/hooks.json"
 
     local exe_path="$bin_dir/claude-notifications-windows-amd64.exe"
-    if ! (cd "$REPO_ROOT" && go build -o "$exe_path" ./cmd/claude-notifications); then
+    if ! (cd "$REPO_ROOT" && go build -o "$exe_path" ./cmd/claude-code-notifaction); then
         fail_test "Build real Windows notification binary" "go build failed"
         cleanup_test_dir
         return
@@ -878,7 +878,7 @@ test_windows_real_hook_schedules_lazy_update() {
     cp "$INSTALL_SCRIPT" "$bin_dir/install.sh"
 
     local exe_path="$bin_dir/claude-notifications-windows-amd64.exe"
-    if ! (cd "$REPO_ROOT" && go build -o "$exe_path" ./cmd/claude-notifications); then
+    if ! (cd "$REPO_ROOT" && go build -o "$exe_path" ./cmd/claude-code-notifaction); then
         fail_test "Build real Windows notification binary for lazy update" "go build failed"
         cleanup_test_dir
         return
@@ -2107,7 +2107,7 @@ main() {
         # /releases/latest may have switched to the new release (without binaries yet).
         RELEASE_BINARY_AVAILABLE=false
         if real_network_tests_supported; then
-            local _check_url="https://github.com/777genius/claude-notifications-go/releases/latest/download"
+            local _check_url="https://github.com/wa815774/claude-code-notifaction/releases/latest/download"
             local _check_bin
             case "$(uname -s)-$(uname -m)" in
                 Linux-x86_64)       _check_bin="claude-notifications-linux-amd64" ;;
@@ -2126,7 +2126,7 @@ main() {
                 _our_version=$(grep '"version"' "$_plugin_json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
             fi
             local _latest_tag=""
-            _latest_tag=$(curl -sI -o /dev/null -w "%{redirect_url}" --connect-timeout 5 "https://github.com/777genius/claude-notifications-go/releases/latest" 2>/dev/null | sed 's|.*/tag/v||')
+            _latest_tag=$(curl -sI -o /dev/null -w "%{redirect_url}" --connect-timeout 5 "https://github.com/wa815774/claude-code-notifaction/releases/latest" 2>/dev/null | sed 's|.*/tag/v||')
 
             if [ -n "$_our_version" ] && [ -n "$_latest_tag" ] && [ "$_our_version" != "$_latest_tag" ]; then
                 echo -e "  ${YELLOW}⚠${NC} Release version mismatch: ours=v${_our_version}, latest=v${_latest_tag} — download tests will be skipped"

@@ -14,12 +14,12 @@ import (
 
 	"github.com/gen2brain/beeep"
 
-	"github.com/777genius/claude-notifications/internal/analyzer"
-	"github.com/777genius/claude-notifications/internal/audio"
-	"github.com/777genius/claude-notifications/internal/config"
-	"github.com/777genius/claude-notifications/internal/errorhandler"
-	"github.com/777genius/claude-notifications/internal/logging"
-	"github.com/777genius/claude-notifications/internal/platform"
+	"github.com/wa815774/claude-notifications/internal/analyzer"
+	"github.com/wa815774/claude-notifications/internal/audio"
+	"github.com/wa815774/claude-notifications/internal/config"
+	"github.com/wa815774/claude-notifications/internal/errorhandler"
+	"github.com/wa815774/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/platform"
 )
 
 const macOSPermissionDeniedMessage = "Notification permission denied. Enable in System Settings > Notifications."
@@ -147,7 +147,7 @@ func (n *Notifier) SendDesktop(status analyzer.Status, message, sessionID, cwd s
 				return nil
 			}
 		} else {
-			logging.Warn("ClaudeNotifier not available on macOS, falling back to beeep (run /claude-notifications-go:init to install it)")
+			logging.Warn("ClaudeNotifier not available on macOS, falling back to beeep (run /claude-code-notifaction:init to install it)")
 		}
 	}
 
@@ -371,7 +371,7 @@ func buildFocusScriptWithOptions(bundleID, cwd, ghosttyTerminalID string) string
 	// Automation permission prompts for notification click handlers — osascript fails silently.
 	// The focus-window approach uses Accessibility + Screen Recording instead of Automation,
 	// with graceful fallback to app-level activation when permissions are not granted.
-	// See: https://github.com/777genius/claude-notifications-go/issues/47
+	// See: https://github.com/wa815774/claude-code-notifaction/issues/47
 	return buildBinaryFocusScript(bundleID, cwd, "")
 }
 
@@ -476,7 +476,7 @@ func (n *Notifier) sendWithBeeep(title, message, appIcon, sound string) error {
 	// - Windows: Use fixed AppName to prevent registry pollution. Each unique AppName
 	//   creates a persistent entry in HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\
 	//   CurrentVersion\Notifications\Settings\ that is never cleaned up.
-	//   See: https://github.com/777genius/claude-notifications-go/issues/4
+	//   See: https://github.com/wa815774/claude-code-notifaction/issues/4
 	// - macOS/Linux: Use unique AppName to prevent notification grouping/replacement,
 	//   allowing multiple notifications to be displayed simultaneously.
 	originalAppName := beeep.AppName

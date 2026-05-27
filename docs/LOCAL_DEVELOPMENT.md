@@ -19,7 +19,7 @@ make build
 
 ### 2. Isolated local marketplace testing
 
-This is the safest default. It uses an isolated Claude config under `~/.claude-dev/claude-notifications-go` and does not touch your real `~/.claude`.
+This is the safest default. It uses an isolated Claude config under `~/.claude-dev/claude-code-notifaction` and does not touch your real `~/.claude`.
 
 ```bash
 scripts/dev-local-plugin.sh install
@@ -66,14 +66,14 @@ Build the binary from the repo root:
 macOS / Linux:
 
 ```bash
-go build -o bin/claude-notifications ./cmd/claude-notifications
+go build -o bin/claude-notifications ./cmd/claude-code-notifaction
 ./bin/claude-notifications version
 ```
 
 Windows PowerShell:
 
 ```powershell
-go build -o bin/claude-notifications.exe ./cmd/claude-notifications
+go build -o bin/claude-notifications.exe ./cmd/claude-code-notifaction
 .\bin\claude-notifications.exe version
 ```
 
@@ -94,7 +94,7 @@ Windows PowerShell:
 Windows Git Bash:
 
 ```bash
-go build -o bin/claude-notifications.exe ./cmd/claude-notifications
+go build -o bin/claude-notifications.exe ./cmd/claude-code-notifaction
 echo '{"session_id":"win-debug","tool_name":"ExitPlanMode"}' | ./bin/claude-notifications.exe handle-hook PreToolUse
 ```
 
@@ -157,7 +157,7 @@ scripts/e2e-real-claude.sh status
 By default the script targets `~/.claude`. To target another Claude config:
 
 ```bash
-REAL_CLAUDE_HOME="$HOME/.claude-dev/claude-notifications-go" scripts/e2e-real-claude.sh status
+REAL_CLAUDE_HOME="$HOME/.claude-dev/claude-code-notifaction" scripts/e2e-real-claude.sh status
 ```
 
 ## Switching Your Real Claude Between Local And Remote

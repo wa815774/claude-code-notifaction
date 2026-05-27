@@ -4,7 +4,7 @@ Clicking a notification activates your terminal window — no more hunting for t
 
 ## Configuration
 
-In `~/.claude/claude-notifications-go/config.json`:
+In `~/.claude/claude-code-notifaction/config.json`:
 
 ```json
 {
@@ -24,7 +24,7 @@ In `~/.claude/claude-notifications-go/config.json`:
 
 ## macOS
 
-Auto-detects your terminal via `TERM_PROGRAM` / `__CFBundleIdentifier`. Uses `terminal-notifier` (auto-installed via `/claude-notifications-go:init`).
+Auto-detects your terminal via `TERM_PROGRAM` / `__CFBundleIdentifier`. Uses `terminal-notifier` (auto-installed via `/claude-code-notifaction:init`).
 
 | Terminal | Focus method |
 |----------|-------------|
@@ -73,7 +73,7 @@ Falls back to standard notifications if no focus tool is available.
 If Linux click-to-focus focuses the wrong window, run the diagnostic script immediately after reproducing the failed click:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/777genius/claude-notifications-go/main/scripts/linux-focus-debug.sh | bash
+curl -fsSL https://raw.githubusercontent.com/wa815774/claude-code-notifaction/main/scripts/linux-focus-debug.sh | bash
 ```
 
 It writes a report file in the current directory with:
@@ -100,8 +100,8 @@ When using iTerm2's tmux integration (`tmux -CC`), standard `tmux select-window`
 
 **Manual setup** (if automatic setup failed):
 ```bash
-python3 -m venv ~/.claude/claude-notifications-go/iterm2-venv
-~/.claude/claude-notifications-go/iterm2-venv/bin/pip install iterm2
+python3 -m venv ~/.claude/claude-code-notifaction/iterm2-venv
+~/.claude/claude-code-notifaction/iterm2-venv/bin/pip install iterm2
 ```
 
 **Diagnostics:**
@@ -110,7 +110,7 @@ python3 -m venv ~/.claude/claude-notifications-go/iterm2-venv
 echo "$CLAUDE_PLUGIN_ROOT"
 
 # List all iTerm2 tabs with tmux pane mappings
-~/.claude/claude-notifications-go/iterm2-venv/bin/python3 \
+~/.claude/claude-code-notifaction/iterm2-venv/bin/python3 \
   "$CLAUDE_PLUGIN_ROOT/scripts/iterm2-select-tab.py" --list
 ```
 

@@ -64,7 +64,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Build binary
-        run: go build -o bin/claude-notifications ./cmd/claude-notifications
+        run: go build -o bin/claude-notifications ./cmd/claude-code-notifaction
 
       - name: Test binary execution (help)
         run: ./bin/claude-notifications help

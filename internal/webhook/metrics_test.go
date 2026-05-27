@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/777genius/claude-notifications/internal/analyzer"
+	"github.com/wa815774/claude-notifications/internal/analyzer"
 )
 
 func TestMetricsRecordRequest(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/777genius/claude-notifications/internal/audio"
-	"github.com/777genius/claude-notifications/internal/errorhandler"
-	"github.com/777genius/claude-notifications/internal/hooks"
-	"github.com/777genius/claude-notifications/internal/logging"
-	"github.com/777genius/claude-notifications/internal/notifier"
+	"github.com/wa815774/claude-notifications/internal/audio"
+	"github.com/wa815774/claude-notifications/internal/errorhandler"
+	"github.com/wa815774/claude-notifications/internal/hooks"
+	"github.com/wa815774/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/notifier"
 )
 
 const version = "1.39.1"
@@ -274,7 +274,7 @@ func windowsLazyUpdateStampPath(pluginRoot string) string {
 	if err != nil || cacheDir == "" {
 		cacheDir = filepath.Join(pluginRoot, ".cache")
 	}
-	return filepath.Join(cacheDir, "claude-notifications-go", "windows-lazy-update-stamp")
+	return filepath.Join(cacheDir, "claude-code-notifaction", "windows-lazy-update-stamp")
 }
 
 func windowsLazyUpdateRecentlyScheduled(stampPath, stampKey string) bool {

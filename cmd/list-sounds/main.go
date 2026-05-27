@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/777genius/claude-notifications/internal/audio"
-	"github.com/777genius/claude-notifications/internal/sounds"
+	"github.com/wa815774/claude-notifications/internal/audio"
+	"github.com/wa815774/claude-notifications/internal/sounds"
 )
 
 func main() {

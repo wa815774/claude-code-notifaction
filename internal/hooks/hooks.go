@@ -12,20 +12,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/777genius/claude-notifications/internal/analyzer"
-	"github.com/777genius/claude-notifications/internal/benchmark"
-	"github.com/777genius/claude-notifications/internal/config"
-	"github.com/777genius/claude-notifications/internal/dedup"
-	"github.com/777genius/claude-notifications/internal/errorhandler"
-	"github.com/777genius/claude-notifications/internal/logging"
-	"github.com/777genius/claude-notifications/internal/notifier"
-	"github.com/777genius/claude-notifications/internal/platform"
-	"github.com/777genius/claude-notifications/internal/sessionname"
-	"github.com/777genius/claude-notifications/internal/state"
-	"github.com/777genius/claude-notifications/internal/summary"
-	"github.com/777genius/claude-notifications/internal/teamstate"
-	"github.com/777genius/claude-notifications/internal/webhook"
-	"github.com/777genius/claude-notifications/pkg/jsonl"
+	"github.com/wa815774/claude-notifications/internal/analyzer"
+	"github.com/wa815774/claude-notifications/internal/benchmark"
+	"github.com/wa815774/claude-notifications/internal/config"
+	"github.com/wa815774/claude-notifications/internal/dedup"
+	"github.com/wa815774/claude-notifications/internal/errorhandler"
+	"github.com/wa815774/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/notifier"
+	"github.com/wa815774/claude-notifications/internal/platform"
+	"github.com/wa815774/claude-notifications/internal/sessionname"
+	"github.com/wa815774/claude-notifications/internal/state"
+	"github.com/wa815774/claude-notifications/internal/summary"
+	"github.com/wa815774/claude-notifications/internal/teamstate"
+	"github.com/wa815774/claude-notifications/internal/webhook"
+	"github.com/wa815774/claude-notifications/pkg/jsonl"
 )
 
 // HookData represents the data received from Claude Code hooks
@@ -648,7 +648,7 @@ func (h *Handler) shouldEmitPermissionGuidance() bool {
 		return true
 	}
 
-	stampDir := filepath.Join(cacheDir, "claude-notifications-go")
+	stampDir := filepath.Join(cacheDir, "claude-code-notifaction")
 	stampPath := filepath.Join(stampDir, "macos-notification-permission-reminder")
 
 	if info, err := os.Stat(stampPath); err == nil {

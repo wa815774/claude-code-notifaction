@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/777genius/claude-notifications/internal/platform"
+	"github.com/wa815774/claude-notifications/internal/platform"
 )
 
 // TestSoundPathConstruction tests the logic for constructing sound paths

@@ -55,7 +55,7 @@ First, let me verify the notification binary is installed:
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
   # Try the standard installed plugin location
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -83,7 +83,7 @@ if [ "$BINARY_EXISTS" = "false" ]; then
   if ! "${PLUGIN_ROOT}/bin/install.sh"; then
     echo ""
     echo "❌ Error: Failed to install notification binary"
-    echo "Please run /claude-notifications-go:init or check your internet connection"
+    echo "Please run /claude-code-notifaction:init or check your internet connection"
     exit 1
   fi
   echo ""
@@ -105,7 +105,7 @@ Now let me detect what sound options are available on your system!
 # Get plugin root (re-declare for this bash session)
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -239,7 +239,7 @@ When user says "play [sound_name]", "preview [sound_name]", "прослушат�
    # Get plugin root
    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
    if [ -z "$PLUGIN_ROOT" ]; then
-     INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+     INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
      if [ -d "$INSTALLED_PATH" ]; then
        PLUGIN_ROOT="$INSTALLED_PATH"
      else
@@ -270,7 +270,7 @@ When user says "play [sound_name]", "preview [sound_name]", "прослушат�
    # Get plugin root
    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
    if [ -z "$PLUGIN_ROOT" ]; then
-     INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+     INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
      if [ -d "$INSTALLED_PATH" ]; then
        PLUGIN_ROOT="$INSTALLED_PATH"
      else
@@ -499,7 +499,7 @@ Use AskUserQuestion with:
 # Get plugin root
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -524,7 +524,7 @@ First, list available audio devices:
 # Get plugin root
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -577,7 +577,7 @@ If webhook is enabled, I'll create a placeholder configuration that you can edit
 
 ## Step 7: Generate Configuration File
 
-Based on your answers, I'll create `~/.claude/claude-notifications-go/config.json`:
+Based on your answers, I'll create `~/.claude/claude-code-notifaction/config.json`:
 
 **Sound Path Construction (Important!):**
 
@@ -677,15 +677,15 @@ PLAN_READY_PATH=$(get_sound_path "$user_answer_4")
 
 1. First, get the stable config directory and create it:
    ```bash
-   mkdir -p "$HOME/.claude/claude-notifications-go"
-   echo "$HOME/.claude/claude-notifications-go/config.json"
+   mkdir -p "$HOME/.claude/claude-code-notifaction"
+   echo "$HOME/.claude/claude-code-notifaction/config.json"
    ```
 
 2. Write config to the stable path (from echo output above)
 
 3. Also copy to legacy path for backward compat with older binary versions:
    ```bash
-   cp "$HOME/.claude/claude-notifications-go/config.json" "${PLUGIN_ROOT}/config/config.json" 2>/dev/null || true
+   cp "$HOME/.claude/claude-code-notifaction/config.json" "${PLUGIN_ROOT}/config/config.json" 2>/dev/null || true
    ```
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -709,7 +709,7 @@ After creating the configuration, show the user:
   🔊 Audio device: <selected device or "System default">
   🔗 Webhooks: <ENABLED/DISABLED>
 
-Configuration file: ~/.claude/claude-notifications-go/config.json
+Configuration file: ~/.claude/claude-code-notifaction/config.json
 ```
 
 ### Test Your Setup
@@ -721,7 +721,7 @@ If yes:
 # Get plugin root
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ -z "$PLUGIN_ROOT" ]; then
-  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-notifications-go"
+  INSTALLED_PATH="$HOME/.claude/plugins/marketplaces/claude-code-notifaction"
   if [ -d "$INSTALLED_PATH" ]; then
     PLUGIN_ROOT="$INSTALLED_PATH"
   else
@@ -741,11 +741,11 @@ echo "✓ Sound test complete!"
 ## Additional Notes
 
 **Editing Later:**
-- You can re-run `/claude-notifications-go:settings` anytime to reconfigure
-- Or manually edit `~/.claude/claude-notifications-go/config.json`
+- You can re-run `/claude-code-notifaction:settings` anytime to reconfigure
+- Or manually edit `~/.claude/claude-code-notifaction/config.json`
 
 **Webhook Configuration:**
-If you enabled webhooks, you'll need to manually edit `~/.claude/claude-notifications-go/config.json` to add:
+If you enabled webhooks, you'll need to manually edit `~/.claude/claude-code-notifaction/config.json` to add:
 - **Slack:** Your webhook URL from Slack integrations
 - **Discord:** Your webhook URL from Discord server settings
 - **Telegram:** Bot token in URL + chat_id field

@@ -1,10 +1,10 @@
 <h1 align="center">Claude Notifications (plugin)</h1>
 
-[![Ubuntu CI](https://github.com/777genius/claude-notifications-go/workflows/Ubuntu%20CI/badge.svg)](https://github.com/777genius/claude-notifications-go/actions)
-[![macOS CI](https://github.com/777genius/claude-notifications-go/workflows/macOS%20CI/badge.svg)](https://github.com/777genius/claude-notifications-go/actions)
-[![Windows CI](https://github.com/777genius/claude-notifications-go/workflows/Windows%20CI/badge.svg)](https://github.com/777genius/claude-notifications-go/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/777genius/claude-notifications-go)](https://goreportcard.com/report/github.com/777genius/claude-notifications-go)
-[![codecov](https://codecov.io/gh/777genius/claude-notifications-go/branch/main/graph/badge.svg)](https://codecov.io/gh/777genius/claude-notifications-go)
+[![Ubuntu CI](https://github.com/wa815774/claude-code-notifaction/workflows/Ubuntu%20CI/badge.svg)](https://github.com/wa815774/claude-code-notifaction/actions)
+[![macOS CI](https://github.com/wa815774/claude-code-notifaction/workflows/macOS%20CI/badge.svg)](https://github.com/wa815774/claude-code-notifaction/actions)
+[![Windows CI](https://github.com/wa815774/claude-code-notifaction/workflows/Windows%20CI/badge.svg)](https://github.com/wa815774/claude-code-notifaction/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wa815774/claude-code-notifaction)](https://goreportcard.com/report/github.com/wa815774/claude-code-notifaction)
+[![codecov](https://codecov.io/gh/wa815774/claude-code-notifaction/branch/main/graph/badge.svg)](https://codecov.io/gh/wa815774/claude-code-notifaction)
 
 <div>
 <table>
@@ -18,7 +18,7 @@
 
 Smart notifications for Claude Code with click-to-focus, git branch display, and webhook integrations.
 
-> **Boost your productivity** — check out the [advanced task manager for Claude with a convenient UI](https://github.com/777genius/claude_agent_teams_ui), from the creator of this plugin.
+> **Boost your productivity** — check out the [advanced task manager for Claude with a convenient UI](https://github.com/wa815774/claude_agent_teams_ui), from the creator of this plugin.
 
 ## Table of Contents
 
@@ -65,12 +65,12 @@ Smart notifications for Claude Code with click-to-focus, git branch display, and
 One command to install everything:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/777genius/claude-notifications-go/main/bin/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/wa815774/claude-code-notifaction/main/bin/bootstrap.sh | bash
 ```
 
-Then restart Claude Code and optionally run `/claude-notifications-go:settings` to configure sounds.
+Then restart Claude Code and optionally run `/claude-code-notifaction:settings` to configure sounds.
 
-The binary is downloaded once and cached locally. You can re-run `/claude-notifications-go:settings` anytime to reconfigure.
+The binary is downloaded once and cached locally. You can re-run `/claude-code-notifaction:settings` anytime to reconfigure.
 
 > If the bootstrap script doesn't work for your environment, use the [Manual Install](#manual-install) steps below inside Claude Code.
 
@@ -83,14 +83,14 @@ Run these slash commands in the Claude Code chat, not in your system terminal:
 
 ```text
 # 1) Add marketplace
-/plugin marketplace add 777genius/claude-notifications-go
+/plugin marketplace add wa815774/claude-code-notifaction
 # 2) Install plugin
-/plugin install claude-notifications-go@claude-notifications-go
+/plugin install claude-code-notifaction@claude-code-notifaction
 # 3) Restart Claude Code
 # 4) Download binary
-/claude-notifications-go:init
+/claude-code-notifaction:init
 # 5) (Optional) Configure sounds and settings
-/claude-notifications-go:settings
+/claude-code-notifaction:settings
 ```
 
 </details>
@@ -102,10 +102,10 @@ Run these slash commands in the Claude Code chat, not in your system terminal:
 Run the same command as for installation — it will update both the plugin and the binary:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/777genius/claude-notifications-go/main/bin/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/wa815774/claude-code-notifaction/main/bin/bootstrap.sh | bash
 ```
 
-Then restart Claude Code to apply the new version. Your settings in `~/.claude/claude-notifications-go/config.json` are preserved across updates.
+Then restart Claude Code to apply the new version. Your settings in `~/.claude/claude-code-notifaction/config.json` are preserved across updates.
 
 <details>
 <summary>Manual update (if bootstrap didn't work)</summary>
@@ -114,10 +114,10 @@ Claude Code also periodically checks for plugin updates automatically. Binaries 
 
 To update manually via Claude Code UI:
 
-1. Run `/plugin`, select **Marketplaces**, choose `claude-notifications-go`, then select **Update marketplace**
-2. Select **Installed**, choose `claude-notifications-go`, then select **Update now**
+1. Run `/plugin`, select **Marketplaces**, choose `claude-code-notifaction`, then select **Update marketplace**
+2. Select **Installed**, choose `claude-code-notifaction`, then select **Update now**
 
-If the binary auto-update didn't work (e.g. no internet at the time), run `/claude-notifications-go:init` to download it manually. If hook definitions changed in the new version, restart Claude Code to apply them.
+If the binary auto-update didn't work (e.g. no internet at the time), run `/claude-code-notifaction:init` to download it manually. If hook definitions changed in the new version, restart Claude Code to apply them.
 
 </details>
 
@@ -185,7 +185,7 @@ See **[Click-to-Focus Guide](docs/CLICK_TO_FOCUS.md)** for configuration details
 
 ## Configuration
 
-Run `/claude-notifications-go:settings` to configure sounds, volume, webhooks, and other options via an interactive wizard. You can re-run it anytime to reconfigure.
+Run `/claude-code-notifaction:settings` to configure sounds, volume, webhooks, and other options via an interactive wizard. You can re-run it anytime to reconfigure.
 
 ### Manual Configuration
 
@@ -193,9 +193,9 @@ Config file location:
 
 | Platform | Path |
 |----------|------|
-| macOS / Linux | `~/.claude/claude-notifications-go/config.json` |
-| Windows (Git Bash) | `~/.claude/claude-notifications-go/config.json` |
-| Windows (PowerShell) | `$env:USERPROFILE\.claude\claude-notifications-go\config.json` |
+| macOS / Linux | `~/.claude/claude-code-notifaction/config.json` |
+| Windows (Git Bash) | `~/.claude/claude-code-notifaction/config.json` |
+| Windows (PowerShell) | `$env:USERPROFILE\.claude\claude-code-notifaction\config.json` |
 
 Edit the config file directly:
 
@@ -331,7 +331,7 @@ bin/list-sounds --play task-complete
 bin/list-sounds --play Glass --volume 0.5
 ```
 
-Or use the skill command: `/claude-notifications-go:sounds`
+Or use the skill command: `/claude-code-notifaction:sounds`
 
 ### Audio Device Selection
 
@@ -347,7 +347,7 @@ bin/list-devices
 #   2: Immersed
 ```
 
-Then add the device name to your `~/.claude/claude-notifications-go/config.json`:
+Then add the device name to your `~/.claude/claude-code-notifaction/config.json`:
 
 ```json
 {

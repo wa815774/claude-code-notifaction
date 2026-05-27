@@ -50,7 +50,7 @@ jobs:
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Build binary
-        run: go build -o bin/claude-notifications ./cmd/claude-notifications
+        run: go build -o bin/claude-notifications ./cmd/claude-code-notifaction
 
       - name: Test binary execution (help)
         run: ./bin/claude-notifications help

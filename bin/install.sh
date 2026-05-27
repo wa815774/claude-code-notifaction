@@ -37,7 +37,7 @@ CURL_EXTRA_OPTS=()
 CURL_COMPAT_OPTS=()
 
 # GitHub repository (can be overridden via env for testing)
-REPO="777genius/claude-notifications-go"
+REPO="wa815774/claude-code-notifaction"
 RELEASES_BASE_URL="${RELEASES_BASE_URL:-https://github.com/${REPO}/releases}"
 LATEST_RELEASE_API_URL="${LATEST_RELEASE_API_URL:-https://api.github.com/repos/${REPO}/releases/latest}"
 DEFAULT_RELEASE_URL="${RELEASES_BASE_URL}/latest/download"
@@ -1339,7 +1339,7 @@ setup_iterm2_venv() {
 
     # Use $HOME/.claude explicitly (not $CLAUDE_HOME) — the Go code resolves
     # the venv path via os.UserHomeDir()/.claude/..., so the venv must be there.
-    local VENV_DIR="$HOME/.claude/claude-notifications-go/iterm2-venv"
+    local VENV_DIR="$HOME/.claude/claude-code-notifaction/iterm2-venv"
 
     # Skip if venv already exists and is functional
     if [ -x "$VENV_DIR/bin/python3" ] && \
@@ -1753,7 +1753,7 @@ main() {
     echo -e "${YELLOW}★${NC} ${BOLD}Boost your productivity${NC}"
     echo -e "  Check out the advanced task manager for Claude"
     echo -e "  with a convenient UI, from the creator of this plugin:"
-    echo -e "  ${GREEN}https://github.com/777genius/claude_agent_teams_ui${NC}"
+    echo -e "  ${GREEN}https://github.com/wa815774/claude_agent_teams_ui${NC}"
     echo -e "${YELLOW}────────────────────────────────────────${NC}"
     echo ""
 }

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/777genius/claude-notifications/internal/logging"
-	"github.com/777genius/claude-notifications/internal/platform"
+	"github.com/wa815774/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/platform"
 )
 
 // Config represents the plugin configuration
@@ -259,7 +259,7 @@ func GetStableConfigDir() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("cannot determine home directory: %w", err)
 	}
-	return filepath.Join(home, ".claude", "claude-notifications-go"), nil
+	return filepath.Join(home, ".claude", "claude-code-notifaction"), nil
 }
 
 // GetStableConfigPath returns the stable config file path outside the plugin cache.
@@ -272,7 +272,7 @@ func GetStableConfigPath() (string, error) {
 }
 
 // LoadFromPluginRoot loads configuration with a resilient fallback chain:
-// 1. Stable path (~/.claude/claude-notifications-go/config.json) — preferred
+// 1. Stable path (~/.claude/claude-code-notifaction/config.json) — preferred
 // 2. Old path (pluginRoot/config/config.json) — fallback, auto-migrates to stable
 // 3. Default config — if neither path has valid config
 //

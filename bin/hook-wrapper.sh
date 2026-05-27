@@ -143,7 +143,7 @@ run_install() {
 
 # === Main Logic ===
 
-STAMP_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/claude-notifications-go"
+STAMP_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/claude-code-notifaction"
 VERSION_CACHE="$STAMP_DIR/verified-version"
 
 NEED_INSTALL=0
@@ -237,7 +237,7 @@ if binary_ok; then
     if [ -z "$_CLAUDE_HOME" ]; then
         _CLAUDE_HOME="$HOME/.claude"
     fi
-    _PTR_DIR="$_CLAUDE_HOME/claude-notifications-go"
+    _PTR_DIR="$_CLAUDE_HOME/claude-code-notifaction"
     _PTR_FILE="$_PTR_DIR/plugin-root"
     mkdir -p "$_PTR_DIR" >/dev/null 2>&1 || true
     _PREV_PTR=""

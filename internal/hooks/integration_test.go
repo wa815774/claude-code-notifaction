@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/777genius/claude-notifications/internal/analyzer"
-	"github.com/777genius/claude-notifications/internal/config"
-	"github.com/777genius/claude-notifications/internal/dedup"
-	"github.com/777genius/claude-notifications/internal/state"
-	"github.com/777genius/claude-notifications/internal/webhook"
+	"github.com/wa815774/claude-notifications/internal/analyzer"
+	"github.com/wa815774/claude-notifications/internal/config"
+	"github.com/wa815774/claude-notifications/internal/dedup"
+	"github.com/wa815774/claude-notifications/internal/state"
+	"github.com/wa815774/claude-notifications/internal/webhook"
 )
 
 // === E2E Test: Full Notification Cycle ===

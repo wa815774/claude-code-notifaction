@@ -52,7 +52,7 @@ jobs:
         shell: bash
 
       - name: Build binary
-        run: go build -o bin/claude-notifications.exe ./cmd/claude-notifications
+        run: go build -o bin/claude-notifications.exe ./cmd/claude-code-notifaction
 
       - name: Test binary execution (help)
         run: ./bin/claude-notifications.exe help

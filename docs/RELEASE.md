@@ -8,14 +8,14 @@ Update the version string in **3 files** (4 occurrences total):
 
 | File | Location | Count |
 |------|----------|-------|
-| `cmd/claude-notifications/main.go` | `const version = "X.Y.Z"` | 1 |
+| `cmd/claude-code-notifaction/main.go` | `const version = "X.Y.Z"` | 1 |
 | `.claude-plugin/plugin.json` | `"version": "X.Y.Z"` | 1 |
 | `.claude-plugin/marketplace.json` | `"version": "X.Y.Z"` | 2 |
 
 Quick check — all occurrences should match:
 
 ```bash
-grep -rn '1\.[0-9]\+\.[0-9]\+' cmd/claude-notifications/main.go .claude-plugin/plugin.json .claude-plugin/marketplace.json
+grep -rn '1\.[0-9]\+\.[0-9]\+' cmd/claude-code-notifaction/main.go .claude-plugin/plugin.json .claude-plugin/marketplace.json
 ```
 
 ## 2. Update CHANGELOG.md
@@ -68,7 +68,7 @@ git push origin --tags
 
 The `release.yml` workflow triggers on tag push and builds binaries for all platforms automatically.
 
-Verify at: https://github.com/777genius/claude-notifications-go/releases
+Verify at: https://github.com/wa815774/claude-code-notifaction/releases
 
 ## ClaudeNotifier.app (macOS)
 
@@ -118,9 +118,9 @@ Description of what was added and why.
 
 ---
 
-📦 **[Installation](https://github.com/777genius/claude-notifications-go#installation)** · 🔄 **[Updating](https://github.com/777genius/claude-notifications-go#updating)**
+📦 **[Installation](https://github.com/wa815774/claude-code-notifaction#installation)** · 🔄 **[Updating](https://github.com/wa815774/claude-code-notifaction#updating)**
 
-**Full Changelog**: https://github.com/777genius/claude-notifications-go/compare/vPREV...vX.Y.Z
+**Full Changelog**: https://github.com/wa815774/claude-code-notifaction/compare/vPREV...vX.Y.Z
 NOTES_EOF
 )"
 ```
@@ -130,8 +130,8 @@ NOTES_EOF
 Comment on fixed issues and merged PRs with a link to the release:
 
 ```bash
-gh issue comment N --body "Fixed in [vX.Y.Z](https://github.com/777genius/claude-notifications-go/releases/tag/vX.Y.Z)."
-gh pr comment N --body "Released in [vX.Y.Z](https://github.com/777genius/claude-notifications-go/releases/tag/vX.Y.Z)."
+gh issue comment N --body "Fixed in [vX.Y.Z](https://github.com/wa815774/claude-code-notifaction/releases/tag/vX.Y.Z)."
+gh pr comment N --body "Released in [vX.Y.Z](https://github.com/wa815774/claude-code-notifaction/releases/tag/vX.Y.Z)."
 ```
 
 ## How auto-update works

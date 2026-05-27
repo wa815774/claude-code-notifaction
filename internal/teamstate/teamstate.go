@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/777genius/claude-notifications/internal/logging"
+	"github.com/wa815774/claude-notifications/internal/logging"
 )
 
 // teamConfig represents the relevant fields from ~/.claude/teams/{name}/config.json

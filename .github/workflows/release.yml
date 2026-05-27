@@ -67,7 +67,7 @@ jobs:
         run: |
           mkdir -p dist
           echo "Building claude-notifications..."
-          go build -ldflags="-s -w" -trimpath -o dist/${{ matrix.binary }} ./cmd/claude-notifications
+          go build -ldflags="-s -w" -trimpath -o dist/${{ matrix.binary }} ./cmd/claude-code-notifaction
           echo "Building sound-preview..."
           SOUND_PREVIEW_BINARY="${{ matrix.binary }}"
           SOUND_PREVIEW_BINARY="${SOUND_PREVIEW_BINARY//claude-notifications/sound-preview}"

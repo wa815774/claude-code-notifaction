@@ -20,7 +20,7 @@ permissions:
 jobs:
   review:
     name: review
-    uses: 777genius/review-router/.github/workflows/reviewrouter-reusable.yml@v1
+    uses: wa815774/review-router/.github/workflows/reviewrouter-reusable.yml@v1
     with:
       runtime_ref: v1
       api_url: "https://api.reviewrouter.site"
