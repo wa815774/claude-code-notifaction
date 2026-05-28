@@ -231,7 +231,7 @@ type Message struct {
 ### 回归测试
 
 - 现有通知测试不修改断言（默认启用提取，但无标题字段时行为不变）
-- 验证 macOS/Windows/Linux 各平台通知格式正确
+- 验证 Windows 平台通知格式正确（标题提取为纯数据层逻辑，与平台无关；非 Windows 平台通知验证不在本次范围）
 
 ## 回滚计划
 
@@ -246,4 +246,4 @@ type Message struct {
 - [ ] 配置 `enabled: false` 时完全保持现有行为
 - [ ] 所有新增代码覆盖率 ≥ 90%
 - [ ] 现有集成测试全部通过
-- [ ] Windows 通知中文标题无乱码（复用现有 UTF-16LE 编码方案）
+- [ ] Windows 通知中文标题无乱码（复用现有 UTF-16LE 编码方案；非 Windows 平台验证不在本次范围）
