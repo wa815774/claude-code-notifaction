@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/gen2brain/beeep"
 
@@ -514,7 +516,18 @@ func (n *Notifier) sendWindowsToast(title, message, subtitle, sessionID string, 
 			strings.Join(textArgs, ", "))
 	}
 
-	cmd := execCommand("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
+	// Encode the script in UTF-16LE and base64 to avoid encoding issues
+	// when passing non-ASCII characters via the -Command parameter.
+	// PowerShell's -EncodedCommand expects base64-encoded UTF-16LE.
+	u16s := utf16.Encode([]rune(psScript))
+	utf16Bytes := make([]byte, len(u16s)*2)
+	for i, u := range u16s {
+		utf16Bytes[i*2] = byte(u)
+		utf16Bytes[i*2+1] = byte(u >> 8)
+	}
+	encodedCmd := base64.StdEncoding.EncodeToString(utf16Bytes)
+
+	cmd := execCommand("powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encodedCmd)
 	output, err := cmd.CombinedOutput()
 	outputStr := strings.TrimSpace(string(output))
 	if err != nil {

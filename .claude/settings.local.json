@@ -3,7 +3,8 @@
     "allow": [
       "Bash(CGO_ENABLED=0 go test *)",
       "Bash(D:/code/claude-code-notifaction/bin/claude-notifications.exe version *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
