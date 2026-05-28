@@ -21,6 +21,7 @@ import (
 	"github.com/wa815774/claude-notifications/internal/notifier"
 	"github.com/wa815774/claude-notifications/internal/platform"
 	"github.com/wa815774/claude-notifications/internal/sessionname"
+	"github.com/wa815774/claude-notifications/internal/sessiontitle"
 	"github.com/wa815774/claude-notifications/internal/state"
 	"github.com/wa815774/claude-notifications/internal/summary"
 	"github.com/wa815774/claude-notifications/internal/teamstate"
@@ -298,6 +299,7 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 		bench.Start("stop.analyze")
 		status, parsedMessages, err = h.handleStopEvent(&hookData)
 		bench.Elapsed("stop.analyze")
+		logging.Debug("Stop: parsedMessages count=%d", len(parsedMessages))
 		if err != nil {
 			return err
 		}
@@ -321,6 +323,7 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 		bench.Start("stop.analyze")
 		status, parsedMessages, err = h.handleStopEvent(&hookData)
 		bench.Elapsed("stop.analyze")
+		logging.Debug("SubagentStop: parsedMessages count=%d", len(parsedMessages))
 		if err != nil {
 			return err
 		}
@@ -456,7 +459,7 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 
 	// Send notifications
 	bench.Start("notify.send")
-	h.sendNotifications(status, body, actions, hookData.SessionID, hookData.CWD)
+	h.sendNotifications(status, body, actions, hookData.SessionID, hookData.CWD, parsedMessages)
 	bench.Elapsed("notify.send")
 
 	logging.Debug("=== Hook completed: %s ===", hookEvent)
@@ -549,7 +552,7 @@ func (h *Handler) handleTeammateIdle(hookData *HookData) error {
 	status := analyzer.StatusTaskComplete
 	body := fmt.Sprintf("Team %q: all teammates finished work", hookData.TeamName)
 
-	h.sendNotifications(status, body, "", hookData.SessionID, hookData.CWD)
+	h.sendNotifications(status, body, "", hookData.SessionID, hookData.CWD, nil)
 
 	logging.Debug("=== Hook completed: TeammateIdle (team notification sent) ===")
 	return nil
@@ -765,7 +768,8 @@ func joinMessageParts(body, actions string) string {
 //
 // body is the summary text (no metadata prefix, no action segments).
 // actions is the formatted action summary (e.g. "📝 1 new  ▶ 2 cmds  ⏱ 41s") or "".
-func (h *Handler) sendNotifications(status analyzer.Status, body, actions, sessionID, cwd string) {
+// messages contains parsed transcript messages; used for session title extraction when enabled.
+func (h *Handler) sendNotifications(status analyzer.Status, body, actions, sessionID, cwd string, messages []jsonl.Message) {
 	// Add panic recovery to prevent notification failures from crashing the plugin
 	defer errorhandler.HandlePanic()
 
@@ -773,17 +777,33 @@ func (h *Handler) sendNotifications(status analyzer.Status, body, actions, sessi
 	gitBranch := platform.GetGitBranch(cwd)
 	folderName := filepath.Base(cwd)
 
-	joined := joinMessageParts(body, actions)
-
-	// Format: "[sessionname|branch folder] message" or "[sessionname folder] message"
-	var enhancedMessage string
-	if gitBranch != "" {
-		enhancedMessage = fmt.Sprintf("[%s|%s %s] %s", sessionName, gitBranch, folderName, joined)
+	// Use session title from transcript if enabled and available
+	displayName := sessionName
+	logging.Debug("sendNotifications: SessionTitle enabled=%t, messages count=%d", h.cfg.GetSessionTitleEnabled(), len(messages))
+	if h.cfg.GetSessionTitleEnabled() && len(messages) > 0 {
+		title := sessiontitle.ExtractTitle(messages)
+		logging.Debug("sendNotifications: ExtractTitle returned %q", title)
+		if title != "" {
+			displayName = sessiontitle.TruncateTitle(title, h.cfg.GetSessionTitleMaxLength())
+			logging.Debug("Using session title: %q (original: %q)", displayName, title)
+		} else {
+			logging.Debug("sendNotifications: ExtractTitle returned empty, falling back to session label")
+		}
 	} else {
-		enhancedMessage = fmt.Sprintf("[%s %s] %s", sessionName, folderName, joined)
+		logging.Debug("sendNotifications: SessionTitle disabled or no messages, using session label")
 	}
 
-	logging.Debug("Session name: %s, git branch: %s, folder: %s", sessionName, gitBranch, folderName)
+	joined := joinMessageParts(body, actions)
+
+	// Format: "[displayName|branch folder] message" or "[displayName folder] message"
+	var enhancedMessage string
+	if gitBranch != "" {
+		enhancedMessage = fmt.Sprintf("[%s|%s %s] %s", displayName, gitBranch, folderName, joined)
+	} else {
+		enhancedMessage = fmt.Sprintf("[%s %s] %s", displayName, folderName, joined)
+	}
+
+	logging.Debug("Session name: %s, display name: %s, git branch: %s, folder: %s", sessionName, displayName, gitBranch, folderName)
 
 	statusStr := string(status)
 
@@ -804,7 +824,7 @@ func (h *Handler) sendNotifications(status analyzer.Status, body, actions, sessi
 			Message:       enhancedMessage,
 			SessionID:     sessionID,
 			CWD:           cwd,
-			SessionName:   sessionName,
+			SessionName:   displayName,
 			GitBranch:     gitBranch,
 			Folder:        folderName,
 			RawBody:       body,

@@ -2558,3 +2558,311 @@ func TestExtractHookDataFromPartialJSON(t *testing.T) {
 		})
 	}
 }
+
+// === Session Title Integration Tests ===
+
+func TestHandler_Stop_SessionTitle_CustomTitle(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "custom-title", CustomTitle: "我的自定义会话标题"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-1",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !mockNotif.wasCalled() {
+		t.Fatal("expected notification to be sent")
+	}
+
+	call := mockNotif.lastCall()
+	if !strings.Contains(call.message, "[我的自定义会话标题") {
+		t.Errorf("expected message to contain custom title, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_AITitle(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "ai-title", AITitle: "AI Generated Title"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-2",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	if !strings.Contains(call.message, "[AI Generated Title") {
+		t.Errorf("expected message to contain AI title, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_Slug(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Slug: "my-awesome-session"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-3",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	if !strings.Contains(call.message, "[my-awesome-session") {
+		t.Errorf("expected message to contain slug, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_FirstUserPrompt(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "user", Message: jsonl.MessageContent{ContentString: "帮我写一个通知插件"}, Timestamp: "2025-01-01T12:00:00Z"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-4",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	if !strings.Contains(call.message, "[帮我写一个通知插件") {
+		t.Errorf("expected message to contain first user prompt, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_Disabled(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(false),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "custom-title", CustomTitle: "Should Not Appear"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-5",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	if strings.Contains(call.message, "Should Not Appear") {
+		t.Errorf("expected message NOT to contain custom title when disabled, got: %q", call.message)
+	}
+	if !strings.HasPrefix(call.message, "[") {
+		t.Errorf("expected message to have default session label prefix, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_Truncated(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(10),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	longTitle := "这是一个非常长的中文标题用于测试截断功能"
+	messages := []jsonl.Message{
+		{Type: "custom-title", CustomTitle: longTitle},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-6",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	expectedPrefix := "[这是一个非常长的中文…"
+	if !strings.Contains(call.message, expectedPrefix) {
+		t.Errorf("expected truncated title in message, got: %q", call.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_WebhookUsesTitle(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Webhook.Enabled = true
+	cfg.Notifications.Webhook.Preset = "custom"
+	cfg.Notifications.Webhook.URL = "http://localhost:9999/test"
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, mockWH := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "custom-title", CustomTitle: "WebhookSessionTitle"},
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-7",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !mockNotif.wasCalled() {
+		t.Error("expected desktop notification to be sent")
+	}
+	if !mockWH.wasCalled() {
+		t.Error("expected webhook notification to be sent")
+	}
+
+	whCall := mockWH.calls[len(mockWH.calls)-1]
+	if !strings.Contains(whCall.message, "[WebhookSessionTitle") {
+		t.Errorf("expected webhook message to contain session title, got: %q", whCall.message)
+	}
+}
+
+func TestHandler_Stop_SessionTitle_FallbackToLabel(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Notifications.Desktop.Enabled = true
+	cfg.Notifications.Desktop.SessionTitle = &config.SessionTitleConfig{
+		Enabled:   boolPtr(true),
+		MaxLength: intPtr(25),
+	}
+	cfg.Statuses = map[string]config.StatusInfo{
+		"task_complete": {Title: "Task Complete"},
+	}
+
+	handler, mockNotif, _ := newTestHandler(t, cfg)
+
+	messages := []jsonl.Message{
+		{Type: "assistant", Message: jsonl.MessageContent{Role: "assistant", Content: []jsonl.Content{{Type: "text", Text: "Done"}}}, Timestamp: "2025-01-01T12:00:01Z"},
+	}
+	transcriptPath := createTempTranscript(t, messages)
+
+	hookData := buildHookDataJSON(HookData{
+		SessionID:      "test-session-title-8",
+		TranscriptPath: transcriptPath,
+		CWD:            "/test",
+	})
+
+	err := handler.HandleHook("Stop", hookData)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	call := mockNotif.lastCall()
+	if !strings.HasPrefix(call.message, "[") {
+		t.Errorf("expected fallback to default session label, got: %q", call.message)
+	}
+}
