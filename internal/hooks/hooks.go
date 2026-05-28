@@ -164,13 +164,12 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 			if err2 := json.Unmarshal(fixed, &hookData); err2 == nil {
 				logging.Debug("JSON parsed after fixing unescaped backslashes")
 			} else {
-				// If the JSON is truncated (e.g. large last_assistant_message exceeds
-				// PowerShell pipe buffer), try to extract critical fields from the
-				// partial data so the hook can still proceed.
-				if isTruncatedJSONError(err2) || isTruncatedJSONError(err) {
+				// JSON is damaged (truncated or invalid character) but may still contain
+				// extractable critical fields. Try to recover so the hook can proceed.
+				if isRecoverableJSONError(err2) || isRecoverableJSONError(err) {
 					if partial, ok := extractHookDataFromPartialJSON(cleanData); ok {
 						hookData = partial
-						logging.Debug("Recovered hook data from truncated JSON: session=%s, transcript=%s",
+						logging.Debug("Recovered hook data from damaged JSON: session=%s, transcript=%s",
 							hookData.SessionID, hookData.TranscriptPath)
 					} else {
 						fixedPreview := string(fixed)
@@ -190,11 +189,11 @@ func (h *Handler) HandleHook(hookEvent string, input io.Reader) error {
 				}
 			}
 		} else {
-			// No unescaped backslash fix possible; check if it's a truncation issue.
-			if isTruncatedJSONError(err) {
+			// No unescaped backslash fix possible; check if it is recoverable.
+			if isRecoverableJSONError(err) {
 				if partial, ok := extractHookDataFromPartialJSON(cleanData); ok {
 					hookData = partial
-					logging.Debug("Recovered hook data from truncated JSON: session=%s, transcript=%s",
+					logging.Debug("Recovered hook data from damaged JSON: session=%s, transcript=%s",
 						hookData.SessionID, hookData.TranscriptPath)
 				} else {
 					return fmt.Errorf("failed to parse hook data: %w", err)
@@ -623,15 +622,19 @@ func fixUnescapedBackslashes(data []byte) []byte {
 	return out.Bytes()
 }
 
-// isTruncatedJSONError reports whether err indicates the JSON was cut off
-// mid-stream (common on Windows when large payloads exceed pipe buffers).
-func isTruncatedJSONError(err error) bool {
+// isRecoverableJSONError reports whether err indicates the JSON is damaged
+// but still contains extractable critical fields. This covers:
+//   - truncation (common on Windows when large payloads exceed pipe buffers)
+//   - unescaped quotes inside string values (e.g. last_assistant_message
+//     containing "He said "Stop"" without proper escaping)
+func isRecoverableJSONError(err error) bool {
 	if err == nil {
 		return false
 	}
 	msg := err.Error()
 	return strings.Contains(msg, "unexpected end of JSON input") ||
-		strings.Contains(msg, "unexpected EOF")
+		strings.Contains(msg, "unexpected EOF") ||
+		strings.Contains(msg, "invalid character")
 }
 
 // extractHookDataFromPartialJSON attempts to pull out the critical fields

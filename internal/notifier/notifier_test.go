@@ -218,33 +218,11 @@ func TestSendDesktop_WithTerminalBundleIDOverride(t *testing.T) {
 	_ = err // Error acceptable in CI
 }
 
-func TestPlaySoundAsync_Disabled(t *testing.T) {
+func TestClose(t *testing.T) {
 	cfg := config.DefaultConfig()
-	cfg.Notifications.Desktop.Sound = false
-
 	n := New(cfg)
 
-	// Should not start any goroutine when sound is disabled
-	n.playSoundAsync("")
-	n.playSoundAsync("nonexistent.mp3")
-
-	// Close should complete quickly since no sound was playing
-	err := n.Close()
-	if err != nil {
-		t.Errorf("Close() returned error: %v", err)
-	}
-}
-
-func TestPlaySoundAsync_EmptyPath(t *testing.T) {
-	cfg := config.DefaultConfig()
-	cfg.Notifications.Desktop.Sound = true
-
-	n := New(cfg)
-
-	// Empty sound path should not start playback
-	n.playSoundAsync("")
-
-	// Close should complete quickly
+	// Close should complete without error
 	err := n.Close()
 	if err != nil {
 		t.Errorf("Close() returned error: %v", err)
@@ -263,7 +241,7 @@ func TestSendWithBeeep_RestoresAppName(t *testing.T) {
 	beeep.AppName = testAppName
 
 	// Call sendWithBeeep
-	_ = n.sendWithBeeep("Test Title", "Test Message", "", "")
+	_ = n.sendWithBeeep("Test Title", "Test Message", "")
 
 	// AppName should be restored
 	if beeep.AppName != testAppName {
@@ -506,16 +484,12 @@ func TestExtractSessionInfo_MoreCases(t *testing.T) {
 	}
 }
 
-func TestPlaySoundAsync_WithSoundFile(t *testing.T) {
+func TestClose_Idempotent(t *testing.T) {
 	cfg := config.DefaultConfig()
-	cfg.Notifications.Desktop.Sound = true
-
 	n := New(cfg)
 
-	// Playing nonexistent sound should not panic
-	n.playSoundAsync("/nonexistent/path/to/sound.mp3")
-
-	// Wait for goroutine to complete
+	// Close should be safe to call multiple times
+	n.Close()
 	n.Close()
 }
 

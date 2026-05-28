@@ -40,7 +40,7 @@ type NotificationsConfig struct {
 type DesktopConfig struct {
 	Enabled          bool    `json:"enabled"`
 	Sound            bool    `json:"sound"`
-	TerminalBell     *bool   `json:"terminalBell"`     // Send BEL to /dev/tty for terminal tab indicators (default: true)
+	TerminalBell     *bool   `json:"terminalBell"`     // Send BEL to /dev/tty for terminal tab indicators (default: false)
 	Volume           float64 `json:"volume"`           // Volume level 0.0-1.0, default 1.0 (full volume)
 	AudioDevice      string  `json:"audioDevice"`      // Audio output device name (empty = system default)
 	AppIcon          string  `json:"appIcon"`          // Path to app icon
@@ -137,6 +137,11 @@ func stringPtr(v string) *string {
 	return &v
 }
 
+// boolPtr returns a pointer to the given bool value
+func boolPtr(v bool) *bool {
+	return &v
+}
+
 const defaultSuppressQuestionAfterAnyNotificationSeconds = 7
 
 // DefaultConfig returns a config with sensible defaults
@@ -153,6 +158,7 @@ func DefaultConfig() *Config {
 				Enabled:      true,
 				Sound:        true,
 				Volume:       1.0, // Full volume by default
+				TerminalBell: boolPtr(false), // default off: rely on system notification sound instead
 				AppIcon:      filepath.Join(pluginRoot, "claude_icon.png"),
 				ClickToFocus: true, // macOS: activate terminal on click (default: enabled)
 				// TerminalBundleID: "" - empty means auto-detect
@@ -188,31 +194,31 @@ func DefaultConfig() *Config {
 		Statuses: map[string]StatusInfo{
 			"task_complete": {
 				Title: "✅ Completed",
-				Sound: filepath.Join(pluginRoot, "sounds", "task-complete.mp3"),
+				Sound: "",
 			},
 			"review_complete": {
 				Title: "🔍 Review",
-				Sound: filepath.Join(pluginRoot, "sounds", "review-complete.mp3"),
+				Sound: "",
 			},
 			"question": {
 				Title: "❓ Question",
-				Sound: filepath.Join(pluginRoot, "sounds", "question.mp3"),
+				Sound: "",
 			},
 			"plan_ready": {
 				Title: "📋 Plan",
-				Sound: filepath.Join(pluginRoot, "sounds", "plan-ready.mp3"),
+				Sound: "",
 			},
 			"session_limit_reached": {
 				Title: "⏱️ Session Limit Reached",
-				Sound: filepath.Join(pluginRoot, "sounds", "error.mp3"),
+				Sound: "",
 			},
 			"api_error": {
 				Title: "🔴 API Error: 401",
-				Sound: filepath.Join(pluginRoot, "sounds", "error.mp3"),
+				Sound: "",
 			},
 			"api_error_overloaded": {
 				Title: "🔴 API Error",
-				Sound: filepath.Join(pluginRoot, "sounds", "error.mp3"),
+				Sound: "",
 			},
 		},
 	}
@@ -590,10 +596,10 @@ func isStatusChannelEnabled(channel *StatusChannelConfig) bool {
 	return *channel.Enabled
 }
 
-// IsTerminalBellEnabled returns true if terminal bell (BEL) should be sent (default: true)
+// IsTerminalBellEnabled returns true if terminal bell (BEL) should be sent (default: false)
 func (c *Config) IsTerminalBellEnabled() bool {
 	if c.Notifications.Desktop.TerminalBell == nil {
-		return true // Default: enabled
+		return false // Default: disabled, rely on system notification sound
 	}
 	return *c.Notifications.Desktop.TerminalBell
 }

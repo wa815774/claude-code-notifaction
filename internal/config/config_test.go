@@ -208,10 +208,12 @@ func TestDefaultConfigPathsNoMixedSeparators(t *testing.T) {
 		assert.NotContains(t, info.Sound, "/sounds/", "Sound path for %s should use filepath.Join, not string concatenation", status)
 	}
 
-	// Verify paths are valid (contain expected filename)
+	// Verify AppIcon path is valid
 	assert.Contains(t, appIcon, "claude_icon.png")
-	assert.Contains(t, cfg.Statuses["task_complete"].Sound, "task-complete.mp3")
-	assert.Contains(t, cfg.Statuses["question"].Sound, "question.mp3")
+
+	// Sound paths are empty by default (system notification sounds are used instead)
+	assert.Empty(t, cfg.Statuses["task_complete"].Sound)
+	assert.Empty(t, cfg.Statuses["question"].Sound)
 }
 
 func TestLoadFromPluginRoot_Success(t *testing.T) {
@@ -665,9 +667,9 @@ func TestDefaultConfig_ClickToFocus(t *testing.T) {
 }
 
 func TestIsTerminalBellEnabled(t *testing.T) {
-	// Default (nil) should be true
+	// Default (nil) should be false
 	cfg := DefaultConfig()
-	assert.True(t, cfg.IsTerminalBellEnabled(), "TerminalBell should be true by default (nil)")
+	assert.False(t, cfg.IsTerminalBellEnabled(), "TerminalBell should be false by default (nil)")
 
 	// Explicitly true
 	bellOn := true
@@ -793,10 +795,6 @@ func TestApplyDefaults_ClickToFocus(t *testing.T) {
 }
 
 // === Tests for Per-Status Enabled ===
-
-func boolPtr(b bool) *bool {
-	return &b
-}
 
 func TestIsStatusEnabled(t *testing.T) {
 	tests := []struct {
