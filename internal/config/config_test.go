@@ -28,6 +28,11 @@ func TestDefaultConfig(t *testing.T) {
 	assert.False(t, cfg.Notifications.Webhook.Enabled)
 	assert.Equal(t, intPtr(12), cfg.Notifications.SuppressQuestionAfterTaskCompleteSeconds)
 
+	// Check session title defaults
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle)
+	assert.Equal(t, boolPtr(true), cfg.Notifications.Desktop.SessionTitle.Enabled)
+	assert.Equal(t, intPtr(25), cfg.Notifications.Desktop.SessionTitle.MaxLength)
+
 	// Check statuses
 	assert.Contains(t, cfg.Statuses, "task_complete")
 	assert.Contains(t, cfg.Statuses, "question")
@@ -1560,4 +1565,82 @@ func TestLoadConfig_WithSuppressFilters(t *testing.T) {
 	assert.True(t, cfg.ShouldFilter("task_complete", "", "ClaudeProbe"))
 	assert.True(t, cfg.ShouldFilter("question", "main", "scratch"))
 	assert.False(t, cfg.ShouldFilter("task_complete", "main", "my-project"))
+}
+
+func TestGetSessionTitleEnabled(t *testing.T) {
+	// Default config: enabled
+	cfg := DefaultConfig()
+	assert.True(t, cfg.GetSessionTitleEnabled(), "default should be enabled")
+
+	// Explicitly disabled
+	cfg.Notifications.Desktop.SessionTitle.Enabled = boolPtr(false)
+	assert.False(t, cfg.GetSessionTitleEnabled(), "should be false when disabled")
+
+	// Explicitly enabled
+	cfg.Notifications.Desktop.SessionTitle.Enabled = boolPtr(true)
+	assert.True(t, cfg.GetSessionTitleEnabled(), "should be true when enabled")
+
+	// Nil SessionTitle struct (should default to true)
+	cfg2 := &Config{}
+	assert.True(t, cfg2.GetSessionTitleEnabled(), "nil SessionTitle should default to enabled")
+}
+
+func TestGetSessionTitleMaxLength(t *testing.T) {
+	// Default config: 25
+	cfg := DefaultConfig()
+	assert.Equal(t, 25, cfg.GetSessionTitleMaxLength(), "default should be 25")
+
+	// Custom value
+	cfg.Notifications.Desktop.SessionTitle.MaxLength = intPtr(40)
+	assert.Equal(t, 40, cfg.GetSessionTitleMaxLength(), "should be 40 when set")
+
+	// Zero value (allowed)
+	cfg.Notifications.Desktop.SessionTitle.MaxLength = intPtr(0)
+	assert.Equal(t, 0, cfg.GetSessionTitleMaxLength(), "should be 0 when set to 0")
+
+	// Nil SessionTitle struct (should default to 25)
+	cfg2 := &Config{}
+	assert.Equal(t, 25, cfg2.GetSessionTitleMaxLength(), "nil SessionTitle should default to 25")
+}
+
+func TestLoadConfig_WithSessionTitle(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "config.json")
+
+	configJSON := `{
+		"notifications": {
+			"desktop": {
+				"enabled": true,
+				"sessionTitle": {
+					"enabled": false,
+					"maxLength": 30
+				}
+			}
+		}
+	}`
+
+	err := os.WriteFile(configPath, []byte(configJSON), 0644)
+	require.NoError(t, err)
+
+	cfg, err := Load(configPath)
+	require.NoError(t, err)
+
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle)
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle.Enabled)
+	assert.False(t, *cfg.Notifications.Desktop.SessionTitle.Enabled)
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle.MaxLength)
+	assert.Equal(t, 30, *cfg.Notifications.Desktop.SessionTitle.MaxLength)
+	assert.False(t, cfg.GetSessionTitleEnabled())
+	assert.Equal(t, 30, cfg.GetSessionTitleMaxLength())
+}
+
+func TestApplyDefaults_SessionTitle(t *testing.T) {
+	cfg := &Config{}
+	cfg.ApplyDefaults()
+
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle)
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle.Enabled)
+	assert.True(t, *cfg.Notifications.Desktop.SessionTitle.Enabled)
+	require.NotNil(t, cfg.Notifications.Desktop.SessionTitle.MaxLength)
+	assert.Equal(t, 25, *cfg.Notifications.Desktop.SessionTitle.MaxLength)
 }

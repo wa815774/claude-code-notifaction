@@ -36,6 +36,12 @@ type NotificationsConfig struct {
 	TeamMode                                    string           `json:"teamMode,omitempty"`        // Team mode: "always" (no suppression, default), "wait-all" (suppress lead, notify when all idle), "never" (silent in team mode)
 }
 
+// SessionTitleConfig represents session title customization settings
+type SessionTitleConfig struct {
+	Enabled   *bool `json:"enabled,omitempty"`   // Default: true
+	MaxLength *int  `json:"maxLength,omitempty"` // Default: 25
+}
+
 // DesktopConfig represents desktop notification settings
 type DesktopConfig struct {
 	Enabled          bool    `json:"enabled"`
@@ -44,8 +50,9 @@ type DesktopConfig struct {
 	Volume           float64 `json:"volume"`           // Volume level 0.0-1.0, default 1.0 (full volume)
 	AudioDevice      string  `json:"audioDevice"`      // Audio output device name (empty = system default)
 	AppIcon          string  `json:"appIcon"`          // Path to app icon
-	ClickToFocus     bool    `json:"clickToFocus"`     // macOS: activate terminal on notification click (default: true)
-	TerminalBundleID string  `json:"terminalBundleId"` // macOS: override auto-detected terminal bundle ID (empty = auto)
+	ClickToFocus     bool                `json:"clickToFocus"`     // macOS: activate terminal on notification click (default: true)
+	TerminalBundleID string              `json:"terminalBundleId"` // macOS: override auto-detected terminal bundle ID (empty = auto)
+	SessionTitle     *SessionTitleConfig `json:"sessionTitle,omitempty"`
 }
 
 // WebhookConfig represents webhook settings
@@ -162,6 +169,10 @@ func DefaultConfig() *Config {
 				AppIcon:      filepath.Join(pluginRoot, "claude_icon.png"),
 				ClickToFocus: true, // macOS: activate terminal on click (default: enabled)
 				// TerminalBundleID: "" - empty means auto-detect
+				SessionTitle: &SessionTitleConfig{
+					Enabled:   boolPtr(true),
+					MaxLength: intPtr(25),
+				},
 			},
 			Webhook: WebhookConfig{
 				Enabled:       false,
@@ -400,6 +411,21 @@ func (c *Config) ApplyDefaults() {
 	}
 	if c.Notifications.SuppressQuestionAfterAnyNotificationSeconds == nil {
 		c.Notifications.SuppressQuestionAfterAnyNotificationSeconds = intPtr(defaultSuppressQuestionAfterAnyNotificationSeconds)
+	}
+
+	// SessionTitle defaults
+	if c.Notifications.Desktop.SessionTitle == nil {
+		c.Notifications.Desktop.SessionTitle = &SessionTitleConfig{
+			Enabled:   boolPtr(true),
+			MaxLength: intPtr(25),
+		}
+	} else {
+		if c.Notifications.Desktop.SessionTitle.Enabled == nil {
+			c.Notifications.Desktop.SessionTitle.Enabled = boolPtr(true)
+		}
+		if c.Notifications.Desktop.SessionTitle.MaxLength == nil {
+			c.Notifications.Desktop.SessionTitle.MaxLength = intPtr(25)
+		}
 	}
 
 	// Status defaults
@@ -646,4 +672,20 @@ func (c *Config) ShouldFilter(status, gitBranch, folder string) bool {
 		}
 	}
 	return false
+}
+
+// GetSessionTitleEnabled returns true if session title extraction is enabled (default: true)
+func (c *Config) GetSessionTitleEnabled() bool {
+	if c.Notifications.Desktop.SessionTitle == nil || c.Notifications.Desktop.SessionTitle.Enabled == nil {
+		return true // Default: enabled
+	}
+	return *c.Notifications.Desktop.SessionTitle.Enabled
+}
+
+// GetSessionTitleMaxLength returns the max length for session titles (default: 25)
+func (c *Config) GetSessionTitleMaxLength() int {
+	if c.Notifications.Desktop.SessionTitle == nil || c.Notifications.Desktop.SessionTitle.MaxLength == nil {
+		return 25 // Default: 25 characters
+	}
+	return *c.Notifications.Desktop.SessionTitle.MaxLength
 }

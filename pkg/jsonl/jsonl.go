@@ -17,6 +17,11 @@ type Message struct {
 	Timestamp         string         `json:"timestamp"`
 	IsApiErrorMessage bool           `json:"isApiErrorMessage,omitempty"`
 	Error             string         `json:"error,omitempty"`
+	// Title-related fields extracted from transcript entries
+	CustomTitle string `json:"customTitle,omitempty"`
+	AITitle     string `json:"aiTitle,omitempty"`
+	Slug        string `json:"slug,omitempty"`
+	IsMeta      bool   `json:"isMeta,omitempty"`
 }
 
 // MessageContent represents the content of a message
