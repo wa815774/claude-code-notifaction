@@ -163,7 +163,28 @@ func (n *Notifier) SendDesktop(status analyzer.Status, message, sessionID, cwd s
 		}
 	}
 
-	// Standard path: beeep (Windows, Linux fallback)
+	// Windows: Use PowerShell Toast API for reliable notification delivery with
+	// Unicode (Chinese, emoji, etc.) support.
+	//
+	// beeep/go-toast's COM API path uses CoRegisterClassObject with a global
+	// GUID. In multi-process scenarios (concurrent Claude Code sessions) this
+	// registration collides and falls back to a PowerShell path that has
+	// encoding edge cases on non-English Windows systems. Using our own
+	// PowerShell invocation with -EncodedCommand (UTF-16LE + Base64) avoids
+	// both the COM registration race and the command-line encoding issues.
+	// See: https://github.com/777genius/claude-notifications-go/issues/?
+	if platform.IsWindows() {
+		if err := n.sendWindowsToast(title, cleanMessage, subtitle, sessionID, timeSensitive); err != nil {
+			logging.Warn("Windows toast notification failed, falling back to beeep: %v", err)
+			// Fall through to beeep
+		} else {
+			logging.Debug("Desktop notification sent via Windows PowerShell: title=%s", title)
+			n.playSoundDetached(statusInfo.Sound)
+			return nil
+		}
+	}
+
+	// Standard path: beeep (Windows fallback, Linux fallback)
 	return n.sendWithBeeep(title, cleanMessage, appIcon, statusInfo.Sound)
 }
 
