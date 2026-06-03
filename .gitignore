@@ -36,6 +36,7 @@ swift-notifier/ClaudeNotifier.app/
 
 # Root binary (should be in bin/ instead)
 /claude-notifications
+/*.exe
 
 # Test binaries
 *.test
